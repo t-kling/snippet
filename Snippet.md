@@ -1,0 +1,30 @@
+- A minimalist browser app for spaced repetition of text extracts, inspired by incremental reading. Rather than trying to render articles/books in app, like Supermemo, we assume the reader will take in information from many different places (including paper books, conversations, classes) and record everything of interest to an open Snippet tab. This site is primarily intended for desktop but should render correctly on mobile devices as well. 
+	- The core of the app are cards called *snippets* that get reviewed on a spaced repetition schedule. 
+	- Users have accounts, which save their snippet library and the state of their spaced repetition schedule. 
+	- Main page: buttons to review deck, browse snippet library, create new snippets.
+	- when creating a snippet, you should be able to give it:
+		- Title (if left blank, autogenerates from the first several words of a text card or "Image 5" for an image only card)
+		- type: excerpt (direct quote from an external source), revised (paraphrase or simplify quotes, or simply write down ideas from conversations and podcasts), original (ideas you formulated, facts you discovered, things of a personal nature you want to remember)
+			- If excerpt or edited: a source, which can be plaintext, hyperlink, or another card. as the user types, autocomplete with existing sources. 
+			- If edited: the option to add another card as a source
+		- Field to add card text
+		- Field to add an image
+		- cloze deletions, as in Anki, with a keyboard shortcut. 
+		- Highlighter in various colors, with a keyboard shortcut for default yellow.
+		- Topics (these are tags, but they will be called topics in the UI.) Auto-suggest previously used topics as the user types. 
+		- On/off slider to put a snippet in the spaced repetition queue or take it out
+			- note: we expect the user to "digest" excerpts by paraphrasing and shortening them, then remove the original direct quote from the study queue. however, the user will want to be able to find the original quote in their library. 
+		- Another on-off slider to flag cards that "need work". The user can use this to mark cards that they might wish to edit when they have time or are considering removing. 
+	- The spaced repetition review should be similar in design to Anki. 
+		- While in the spaced repetition queue, there is a slider for whether you review "needs work" cards or omit them.
+		- The "front" of a snippet card shows only the title, text, and image, with any clozes deleted. The reverse shows the content of the clozes and all of the other information and sliders.
+		- Similar buttons for re-scheduling the card to Anki: unfamiliar, hard, good, easy
+	- Snippet library: browse and edit snippets, with options to sort by date created, date modified, title, or scheduled review date. Filter by topic, "need work", in queue or not. 
+	- Advanced features to implement later, in rough order of priority:
+		- Mathjax or other LaTeX rendering, with the ability to cloze-delete terms inside of equations
+		- Cloze deletions for images (hide parts of the image with colorful squares which the user draws onto the image and can resize or delete.)
+		- Download your snippet library for local storage
+		- Import markdown or plaintext (e.g. Obsidian cards) to automatically generate snippets
+		- Auto-compress large images for storage
+		- Browser extension to save snippets
+		- iPhone app to save snippets from the share menu
