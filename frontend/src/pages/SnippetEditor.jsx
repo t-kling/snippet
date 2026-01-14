@@ -561,6 +561,30 @@ function SnippetEditor() {
             </div>
           </div>
 
+          <div style={{ marginBottom: '15px' }}>
+            <label htmlFor="parentSnippet" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Parent Snippet (optional)
+            </label>
+            <input
+              id="parentSnippet"
+              type="text"
+              value={formData.parentSnippet}
+              onChange={(e) => setFormData({ ...formData, parentSnippet: e.target.value })}
+              placeholder="Title of original card if this is a copy"
+              style={{
+                width: '100%',
+                padding: '8px',
+                fontSize: '14px',
+                border: '2px solid var(--border-color)',
+                backgroundColor: '#FFF',
+                borderRadius: '4px',
+              }}
+            />
+            <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+              Automatically filled when using "Make Copy Snippet"
+            </small>
+          </div>
+
           {/* Optional metadata fields - appear when source title is filled */}
           {formData.source && (
             <>
