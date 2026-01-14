@@ -174,6 +174,10 @@ async function handleQuickSave(info, tab) {
         action: 'showToast',
         message: 'Text too long (max ~1000 words)',
         type: 'error'
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.warn('Toast message failed:', chrome.runtime.lastError.message);
+        }
       });
       return;
     }
@@ -197,6 +201,11 @@ async function handleQuickSave(info, tab) {
       message: 'Snippet saved!',
       preview: snippetTitle,
       type: 'success'
+    }, (response) => {
+      // Check if message was received
+      if (chrome.runtime.lastError) {
+        console.warn('Toast message failed:', chrome.runtime.lastError.message);
+      }
     });
   } catch (error) {
     console.error('Quick save error:', error);
@@ -204,6 +213,10 @@ async function handleQuickSave(info, tab) {
       action: 'showToast',
       message: error.message || 'Failed to save snippet',
       type: 'error'
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn('Error toast failed:', chrome.runtime.lastError.message);
+      }
     });
   }
 }
