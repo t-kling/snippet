@@ -274,6 +274,19 @@ textarea {
     color: #f9fafb;
   }
 
+  .subtitle {
+    color: #9ca3af;
+  }
+
+  label {
+    color: #e5e7eb;
+  }
+
+  .radio-label,
+  .checkbox-label {
+    color: #e5e7eb;
+  }
+
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -283,14 +296,35 @@ textarea {
     color: #f9fafb;
   }
 
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af;
+  }
+
+  .char-counter {
+    color: #9ca3af;
+  }
+
   .btn-secondary {
     background: #374151;
     color: #f9fafb;
     border-color: #4b5563;
   }
 
+  .btn-secondary:hover {
+    background: #4b5563;
+  }
+
   .source-info {
     background: #374151;
+  }
+
+  .source-info strong {
+    color: #e5e7eb;
+  }
+
+  .source-info span {
+    color: #9ca3af;
   }
 
   .suggestion-tag {
@@ -300,5 +334,13 @@ textarea {
 
   .suggestion-tag:hover {
     background: #6b7280;
+  }
+
+  .footer {
+    color: #9ca3af;
+  }
+
+  .loading {
+    color: #9ca3af;
   }
 }
