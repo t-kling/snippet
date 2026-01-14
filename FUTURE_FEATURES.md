@@ -2,6 +2,58 @@
 
 Features planned for future releases, roughly in order of priority.
 
+## Recently Completed ✓
+
+### Priority System
+- ✓ Priority ratings (high/medium/low) for cards
+- ✓ Priority-based sorting in review and library
+- ✓ Bulk priority updates
+- ✓ Priority distribution statistics
+
+### Image Support
+- ✓ Upload images to snippets
+- ✓ Base64 image storage with 300KB limit
+- ✓ Auto-generate titles for image-only cards
+- ✓ Display images in review interface
+- ✓ Image cloze deletions (draw rectangles to hide image sections)
+
+### LaTeX/Math Support
+- ✓ MathJax rendering for inline and block equations
+- ✓ Cloze deletions within equations
+- ✓ Live preview in editor
+
+### Enhanced Features
+- ✓ Copy snippet functionality with parent tracking
+- ✓ Bulk operations (add to queue, mark to edit, delete, add topics, set priority)
+- ✓ AI-powered semantic search
+- ✓ Auto-cloze suggestions
+- ✓ Card maturity tracking (new/young/mature/veteran)
+- ✓ Settings panel with customization options
+- ✓ Browse mode (view all cards without due date filter)
+- ✓ Appreciation mode (random order for enjoyment)
+
+## Current Priorities
+
+### About Page
+- Create an "About" page explaining the app's philosophy and usage
+- User needs to write content
+- Add to navigation menu
+- Include credits, inspiration sources (Anki, incremental reading)
+
+### UI/UX Improvements
+- **Simplify Navigation**: Hide or consolidate menu items for cleaner interface
+- **Color Themes**: Dark mode and customizable color schemes
+- **Spreadsheet View**: Table/grid view for library with sortable columns
+- **Mobile Optimization**: Improve mobile review experience
+- **Keyboard Shortcuts**: Comprehensive keyboard navigation
+
+### Code Refactoring
+- **Backend**: Simplify controller logic, reduce duplication
+- **Frontend**: Extract repeated styles into reusable components
+- **Database**: Review and optimize query performance
+- **API**: Consolidate similar endpoints
+- **Documentation**: Add inline code comments and API documentation
+
 ## Authentication & Account Management
 
 ### Password Reset
@@ -35,25 +87,7 @@ Features planned for future releases, roughly in order of priority.
 - Default yellow highlight with keyboard shortcut
 - Store highlight data as ranges in content
 - Render highlights in review mode
-
-### Image Support
-- Upload images to snippets
-- Image storage (Supabase Storage or similar)
-- Auto-generate titles for image-only cards ("Image 5")
-- Display images in review interface
-- Auto-compress large images for storage
-
-### MathJax/LaTeX Rendering
-- Render mathematical equations
-- Support for inline and block equations
-- Cloze deletions within equations
-- LaTeX syntax highlighting in editor
-
-### Image Cloze Deletions
-- Draw colorful squares to hide parts of images
-- Resize and delete image clozes
-- Reveal image sections in review mode
-- Useful for diagrams, maps, anatomy, etc.
+- Consider multiple highlight colors for different purposes
 
 ## Import/Export Features
 
@@ -71,9 +105,9 @@ Features planned for future releases, roughly in order of priority.
 - Parse existing tags/topics
 
 ### Browser Extension
+- See separate `BROWSER_EXTENSION_PLAN.md` for detailed design
 - Quick-save snippets from any webpage
 - Automatic source URL capture
-- Selected text becomes snippet content
 - Chrome, Firefox, Safari support
 - Direct save to user account
 
@@ -92,12 +126,13 @@ Features planned for future releases, roughly in order of priority.
 - Suspend/unsuspend cards
 - Reschedule bulk cards
 
-### Statistics Dashboard
-- Review streak tracking
-- Cards reviewed per day
+### Enhanced Statistics Dashboard
+- Review streak tracking (current: basic stats only)
+- Cards reviewed per day with graphs
 - Retention rates by topic
-- Time spent studying
-- Forecast of upcoming reviews
+- Time spent studying tracker
+- Forecast of upcoming reviews (heatmap calendar view)
+- Historical review performance charts
 
 ### Study Sessions
 - Pomodoro timer integration
