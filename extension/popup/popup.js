@@ -146,11 +146,18 @@ async function init() {
     loadSnippetData(pendingSnippet);
     showScreen('edit');
 
+    // Show source info
+    document.querySelector('.source-info').style.display = 'block';
+
     // Load user's topics for suggestions
     loadTopicSuggestions();
   } else {
     // No pending data, show edit screen with empty form
     showScreen('edit');
+
+    // Hide source info when there's no source
+    document.querySelector('.source-info').style.display = 'none';
+
     loadTopicSuggestions();
   }
 }
