@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snippet Saver</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Login Screen -->
+    <div id="login-screen" class="screen" style="display: none;">
+      <div class="header">
+        <h1>🔖 Snippet</h1>
+        <p class="subtitle">Login to save snippets</p>
+      </div>
+
+      <form id="login-form">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required>
+        </div>
+
+        <div id="login-error" class="error-message" style="display: none;"></div>
+
+        <button type="submit" class="btn btn-primary" id="login-btn">
+          Login
+        </button>
+      </form>
+
+      <div class="footer">
+        Don't have an account? <a href="#" id="open-web-app">Sign up</a>
+      </div>
+    </div>
+
+    <!-- Edit Screen -->
+    <div id="edit-screen" class="screen" style="display: none;">
+      <div class="header">
+        <h1>🔖 Save Snippet</h1>
+      </div>
+
+      <form id="snippet-form">
+        <div class="form-group">
+          <label for="content">Content</label>
+          <textarea id="content" rows="6" required></textarea>
+          <div class="char-counter">
+            <span id="char-count">0</span> / 6000 characters
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" placeholder="Auto-generated from content">
+        </div>
+
+        <div class="form-group">
+          <label>Type</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="type" value="excerpt" checked>
+              <span>Excerpt</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="type" value="revised">
+              <span>Revised</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="type" value="original">
+              <span>Original</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="topics">Topics (comma-separated)</label>
+          <input type="text" id="topics" placeholder="e.g., History, Science">
+          <div id="topic-suggestions" class="suggestions"></div>
+        </div>
+
+        <div class="form-group">
+          <label>Priority</label>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="priority" value="low">
+              <span>Low</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="priority" value="medium" checked>
+              <span>Medium</span>
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="priority" value="high">
+              <span>High</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="in-queue" checked>
+            <span>Add to Queue</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="to-edit">
+            <span>Mark To Edit</span>
+          </label>
+        </div>
+
+        <div class="source-info">
+          <strong>Source:</strong> <span id="source-title"></span><br>
+          <strong>URL:</strong> <span id="source-url"></span>
+        </div>
+
+        <div id="save-error" class="error-message" style="display: none;"></div>
+
+        <div class="button-group">
+          <button type="button" class="btn btn-secondary" id="cancel-btn">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary" id="save-btn">
+            Save Snippet
+          </button>
+        </div>
+      </form>
+
+      <div class="footer">
+        <button id="logout-btn" class="link-btn">Logout</button>
+      </div>
+    </div>
+
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="screen">
+      <div class="loading">Loading...</div>
+    </div>
+  </div>
+
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

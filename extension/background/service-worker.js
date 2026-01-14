@@ -1,0 +1,234 @@
+/**
+ * Background Service Worker
+ * Handles context menus, keyboard shortcuts, and API communication
+ */
+
+import { initializeAPI, isLoggedIn, createSnippet } from '../utils/api.js';
+import { cleanUrl } from '../utils/url-cleaner.js';
+
+// Initialize API on extension load
+initializeAPI();
+
+// Create context menu items when extension is installed
+chrome.runtime.onInstalled.addListener(() => {
+  // Context menu for selected text
+  chrome.contextMenus.create({
+    id: 'quick-save',
+    title: 'Quick Save to Snippet',
+    contexts: ['selection']
+  });
+
+  chrome.contextMenus.create({
+    id: 'full-edit',
+    title: 'Save & Edit Snippet',
+    contexts: ['selection']
+  });
+
+  // Context menu for images
+  chrome.contextMenus.create({
+    id: 'save-image',
+    title: 'Save Image to Snippet',
+    contexts: ['image']
+  });
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  const loggedIn = await isLoggedIn();
+
+  if (!loggedIn) {
+    // Open popup to login
+    chrome.action.openPopup();
+    return;
+  }
+
+  if (info.menuItemId === 'quick-save') {
+    await handleQuickSave(info, tab);
+  } else if (info.menuItemId === 'full-edit') {
+    await handleFullEdit(info, tab);
+  } else if (info.menuItemId === 'save-image') {
+    await handleImageSave(info, tab);
+  }
+});
+
+// Handle keyboard shortcuts
+chrome.commands.onCommand.addListener(async (command) => {
+  const loggedIn = await isLoggedIn();
+
+  if (!loggedIn) {
+    chrome.action.openPopup();
+    return;
+  }
+
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+  if (command === 'quick-save') {
+    // Request selected text from content script
+    chrome.tabs.sendMessage(tab.id, { action: 'getSelection' }, async (response) => {
+      if (response && response.selectedText) {
+        const info = {
+          selectionText: response.selectedText,
+          pageUrl: tab.url
+        };
+        await handleQuickSave(info, tab);
+      }
+    });
+  } else if (command === 'full-edit') {
+    chrome.tabs.sendMessage(tab.id, { action: 'getSelection' }, async (response) => {
+      if (response && response.selectedText) {
+        const info = {
+          selectionText: response.selectedText,
+          pageUrl: tab.url
+        };
+        await handleFullEdit(info, tab);
+      }
+    });
+  }
+});
+
+/**
+ * Handle Quick Save - instant save with no popup
+ */
+async function handleQuickSave(info, tab) {
+  const selectedText = info.selectionText;
+  const pageUrl = cleanUrl(info.pageUrl || tab.url);
+  const pageTitle = tab.title;
+
+  // Auto-generate title from first 50 chars
+  const snippetTitle = selectedText.length > 50
+    ? selectedText.substring(0, 50).trim() + '...'
+    : selectedText.trim();
+
+  try {
+    // Character limit check (~1000 words = ~6000 chars)
+    if (selectedText.length > 6000) {
+      chrome.tabs.sendMessage(tab.id, {
+        action: 'showToast',
+        message: 'Text too long (max ~1000 words)',
+        type: 'error'
+      });
+      return;
+    }
+
+    const snippetData = {
+      title: snippetTitle,
+      type: 'excerpt',
+      content: selectedText,
+      source: pageTitle,
+      url: pageUrl,
+      priority: 'medium',
+      inQueue: true,
+      topics: []
+    };
+
+    await createSnippet(snippetData);
+
+    // Show success toast
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'showToast',
+      message: 'Snippet saved!',
+      preview: snippetTitle,
+      type: 'success'
+    });
+  } catch (error) {
+    console.error('Quick save error:', error);
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'showToast',
+      message: error.message || 'Failed to save snippet',
+      type: 'error'
+    });
+  }
+}
+
+/**
+ * Handle Full Edit - open popup with pre-filled data
+ */
+async function handleFullEdit(info, tab) {
+  const selectedText = info.selectionText;
+  const pageUrl = cleanUrl(info.pageUrl || tab.url);
+  const pageTitle = tab.title;
+
+  // Store selection data for popup to access
+  await chrome.storage.local.set({
+    pendingSnippet: {
+      content: selectedText,
+      source: pageTitle,
+      url: pageUrl,
+      timestamp: Date.now()
+    }
+  });
+
+  // Open popup
+  chrome.action.openPopup();
+}
+
+/**
+ * Handle Image Save
+ */
+async function handleImageSave(info, tab) {
+  const imageUrl = info.srcUrl;
+  const pageUrl = cleanUrl(info.pageUrl || tab.url);
+  const pageTitle = tab.title;
+
+  try {
+    // Fetch image and convert to base64
+    const response = await fetch(imageUrl);
+    const blob = await response.blob();
+
+    // Check size (300KB limit)
+    if (blob.size > 300 * 1024) {
+      chrome.tabs.sendMessage(tab.id, {
+        action: 'showToast',
+        message: 'Image too large (max 300KB)',
+        type: 'error'
+      });
+      return;
+    }
+
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = async function() {
+      const base64data = reader.result;
+
+      // Auto-generate title
+      const domain = new URL(pageUrl).hostname;
+      const snippetTitle = `Image from ${domain}`;
+
+      // Store for popup
+      await chrome.storage.local.set({
+        pendingSnippet: {
+          imageData: base64data,
+          source: pageTitle,
+          url: pageUrl,
+          title: snippetTitle,
+          timestamp: Date.now()
+        }
+      });
+
+      // Open popup for confirmation
+      chrome.action.openPopup();
+    };
+    reader.readAsDataURL(blob);
+  } catch (error) {
+    console.error('Image save error:', error);
+    chrome.tabs.sendMessage(tab.id, {
+      action: 'showToast',
+      message: 'Failed to save image',
+      type: 'error'
+    });
+  }
+}
+
+// Listen for messages from popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === 'saveSnippet') {
+    createSnippet(request.data)
+      .then((result) => {
+        sendResponse({ success: true, data: result });
+      })
+      .catch((error) => {
+        sendResponse({ success: false, error: error.message });
+      });
+    return true; // Keep channel open for async response
+  }
+});
