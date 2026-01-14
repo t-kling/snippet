@@ -46,7 +46,7 @@ const getDueCards = async (req, res) => {
       paramIndex++;
     }
 
-    query += ' GROUP BY s.id, r.ease_factor, r.interval, r.repetitions, r.next_review_date';
+    query += ' GROUP BY s.id, s.priority, r.ease_factor, r.interval, r.repetitions, r.next_review_date';
 
     // Order based on mode (priority comes first in all modes)
     // Within each priority level: study/browse by due date, appreciation randomly
