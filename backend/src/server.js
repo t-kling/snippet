@@ -5,6 +5,7 @@ const authRoutes = require('./routes/auth');
 const snippetRoutes = require('./routes/snippets');
 const reviewRoutes = require('./routes/reviews');
 const topicRoutes = require('./routes/topics');
+const aiRoutes = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -18,6 +19,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/snippets', snippetRoutes);
 app.use('/api/review', reviewRoutes);
 app.use('/api/topics', topicRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

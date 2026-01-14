@@ -7,6 +7,9 @@ const {
   deleteSnippet,
   toggleQueue,
   toggleNeedsWork,
+  getSources,
+  exportLibrary,
+  importLibrary,
 } = require('../controllers/snippetController');
 const authMiddleware = require('../middleware/auth');
 
@@ -17,6 +20,9 @@ router.use(authMiddleware);
 
 router.post('/', createSnippet);
 router.get('/', getSnippets);
+router.get('/sources', getSources);
+router.get('/export', exportLibrary);
+router.post('/import', importLibrary);
 router.get('/:id', getSnippet);
 router.put('/:id', updateSnippet);
 router.delete('/:id', deleteSnippet);

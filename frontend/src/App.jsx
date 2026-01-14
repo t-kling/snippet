@@ -1,10 +1,15 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { SettingsProvider } from './contexts/SettingsContext';
 import Login from './pages/Login';
+import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
 import Library from './pages/Library';
 import SnippetEditor from './pages/SnippetEditor';
 import Review from './pages/Review';
+import TopicReview from './pages/TopicReview';
+import SourceReview from './pages/SourceReview';
+import Stats from './pages/Stats';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -28,15 +33,24 @@ function PublicRoute({ children }) {
 
 function App() {
   return (
-    <Router>
-      <AuthProvider>
-        <div style={{ minHeight: '100vh', backgroundColor: '#fafafa' }}>
-          <Routes>
+    <SettingsProvider>
+      <Router>
+        <AuthProvider>
+          <div style={{ minHeight: '100vh' }}>
+            <Routes>
             <Route
               path="/login"
               element={
                 <PublicRoute>
                   <Login />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/reset-password"
+              element={
+                <PublicRoute>
+                  <ResetPassword />
                 </PublicRoute>
               }
             />
@@ -80,10 +94,35 @@ function App() {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/review/topic"
+              element={
+                <PrivateRoute>
+                  <TopicReview />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/review/source"
+              element={
+                <PrivateRoute>
+                  <SourceReview />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/stats"
+              element={
+                <PrivateRoute>
+                  <Stats />
+                </PrivateRoute>
+              }
+            />
           </Routes>
         </div>
       </AuthProvider>
     </Router>
+    </SettingsProvider>
   );
 }
 

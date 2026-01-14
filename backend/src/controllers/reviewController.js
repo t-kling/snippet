@@ -3,7 +3,8 @@ const { calculateNextReview, getNextReviewDate } = require('../utils/sm2');
 
 const getDueCards = async (req, res) => {
   try {
-    const { includeNeedsWork = 'true' } = req.query;
+    const { includeToEdit = 'true', topic, source, mode = 'study' } = req.query;
+    console.log('getDueCards - mode:', mode, 'topic:', topic, 'source:', source, 'includeToEdit:', includeToEdit);
 
     let query = `
       SELECT s.*, r.ease_factor, r.interval, r.repetitions, r.next_review_date,
@@ -19,16 +20,47 @@ const getDueCards = async (req, res) => {
       LEFT JOIN topics t ON st.topic_id = t.id
       WHERE s.user_id = $1
         AND s.in_queue = true
-        AND r.next_review_date <= NOW()
     `;
 
-    if (includeNeedsWork === 'false') {
-      query += ' AND s.needs_work = false';
+    // Only filter by due date in study mode
+    if (mode === 'study') {
+      query += ' AND r.next_review_date <= NOW()';
     }
 
-    query += ' GROUP BY s.id, r.ease_factor, r.interval, r.repetitions, r.next_review_date ORDER BY r.next_review_date ASC';
+    const params = [req.userId];
+    let paramIndex = 2;
 
-    const result = await db.query(query, [req.userId]);
+    if (includeToEdit === 'false') {
+      query += ' AND s.to_edit = false';
+    }
+
+    if (topic) {
+      query += ` AND t.name = $${paramIndex}`;
+      params.push(topic);
+      paramIndex++;
+    }
+
+    if (source) {
+      query += ` AND s.source = $${paramIndex}`;
+      params.push(source);
+      paramIndex++;
+    }
+
+    query += ' GROUP BY s.id, r.ease_factor, r.interval, r.repetitions, r.next_review_date';
+
+    // Order based on mode
+    if (mode === 'browse') {
+      query += ' ORDER BY r.next_review_date ASC';
+    } else if (mode === 'appreciation') {
+      query += ' ORDER BY RANDOM()';
+    } else {
+      query += ' ORDER BY r.next_review_date ASC';
+    }
+
+    console.log('Final query:', query);
+    console.log('Params:', params);
+    const result = await db.query(query, params);
+    console.log('getDueCards - returned', result.rows.length, 'cards');
     res.json(result.rows);
   } catch (error) {
     console.error('Get due cards error:', error);
@@ -113,7 +145,7 @@ const getStats = async (req, res) => {
       `SELECT
          COUNT(*) FILTER (WHERE s.in_queue = true) as total_in_queue,
          COUNT(*) FILTER (WHERE s.in_queue = true AND r.next_review_date <= NOW()) as due_today,
-         COUNT(*) FILTER (WHERE s.needs_work = true) as needs_work,
+         COUNT(*) FILTER (WHERE s.to_edit = true) as to_edit,
          COUNT(*) as total_snippets
        FROM snippets s
        LEFT JOIN reviews r ON s.id = r.snippet_id
@@ -128,8 +160,35 @@ const getStats = async (req, res) => {
   }
 };
 
+const clearSpacedRepetitionData = async (req, res) => {
+  try {
+    // Reset all review data for the user's snippets
+    const result = await db.query(
+      `UPDATE reviews r
+       SET ease_factor = 2.5,
+           interval = 0,
+           repetitions = 0,
+           next_review_date = NOW(),
+           last_reviewed_at = NULL
+       FROM snippets s
+       WHERE r.snippet_id = s.id
+         AND s.user_id = $1`,
+      [req.userId]
+    );
+
+    res.json({
+      message: 'Spaced repetition data cleared successfully',
+      cardsReset: result.rowCount
+    });
+  } catch (error) {
+    console.error('Clear spaced repetition data error:', error);
+    res.status(500).json({ error: 'Failed to clear spaced repetition data' });
+  }
+};
+
 module.exports = {
   getDueCards,
   submitReview,
   getStats,
+  clearSpacedRepetitionData,
 };

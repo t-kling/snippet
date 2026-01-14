@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { reviewAPI } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
+import Header from '../components/Header';
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
 
   useEffect(() => {
     loadStats();
@@ -22,32 +22,16 @@ function Dashboard() {
   };
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '40px 20px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h1>Snippet</h1>
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-          <span style={{ color: '#666' }}>{user?.email}</span>
-          <button
-            onClick={logout}
-            style={{
-              padding: '8px 16px',
-              fontSize: '14px',
-              backgroundColor: 'transparent',
-              color: '#666',
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </div>
+    <div>
+      <Header />
+
+      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 20px 40px' }}>
 
       {stats && (
         <div style={{
           padding: '20px',
-          backgroundColor: '#f5f5f5',
+          backgroundColor: 'var(--bg-secondary)',
+          border: '2px solid var(--border-color)',
           borderRadius: '8px',
           marginBottom: '30px',
           display: 'grid',
@@ -55,20 +39,20 @@ function Dashboard() {
           gap: '15px',
         }}>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#007bff' }}>{stats.due_today}</div>
-            <div style={{ fontSize: '14px', color: '#666' }}>Due Today</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--again-red)' }}>{stats.due_today}</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Due Today</div>
           </div>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{stats.total_in_queue}</div>
-            <div style={{ fontSize: '14px', color: '#666' }}>In Queue</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{stats.total_in_queue}</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>In Queue</div>
           </div>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold' }}>{stats.total_snippets}</div>
-            <div style={{ fontSize: '14px', color: '#666' }}>Total Snippets</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{stats.total_snippets}</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Total Snippets</div>
           </div>
           <div>
-            <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#ffa500' }}>{stats.needs_work}</div>
-            <div style={{ fontSize: '14px', color: '#666' }}>Needs Work</div>
+            <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--hard-orange)' }}>{stats.to_edit}</div>
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>To Edit</div>
           </div>
         </div>
       )}
@@ -79,8 +63,9 @@ function Dashboard() {
           style={{
             display: 'block',
             padding: '20px',
-            backgroundColor: '#007bff',
+            backgroundColor: 'var(--blue-button)',
             color: 'white',
+            border: 'none',
             textAlign: 'center',
             textDecoration: 'none',
             borderRadius: '8px',
@@ -88,22 +73,57 @@ function Dashboard() {
             fontWeight: 'bold',
           }}
         >
-          Review Cards {stats && stats.due_today > 0 && `(${stats.due_today})`}
+          Review Snippets {stats && stats.due_today > 0 && `(${stats.due_today})`}
         </Link>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+          <Link
+            to="/review/topic"
+            style={{
+              display: 'block',
+              padding: '20px',
+              backgroundColor: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              textAlign: 'center',
+              textDecoration: 'none',
+              border: '2px solid var(--border-color)',
+              borderRadius: '8px',
+              fontSize: '16px',
+            }}
+          >
+            Review by Topic
+          </Link>
+
+          <Link
+            to="/review/source"
+            style={{
+              display: 'block',
+              padding: '20px',
+              backgroundColor: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              textAlign: 'center',
+              textDecoration: 'none',
+              border: '2px solid var(--border-color)',
+              borderRadius: '8px',
+              fontSize: '16px',
+            }}
+          >
+            Review by Source
+          </Link>
+        </div>
 
         <Link
           to="/library"
           style={{
             display: 'block',
             padding: '20px',
-            backgroundColor: 'white',
-            color: '#333',
+            backgroundColor: 'var(--bg-secondary)',
+            color: 'var(--text-primary)',
             textAlign: 'center',
             textDecoration: 'none',
-            border: '2px solid #ddd',
+            border: '2px solid var(--border-color)',
             borderRadius: '8px',
             fontSize: '18px',
-            fontWeight: 'bold',
           }}
         >
           Browse Library
@@ -114,8 +134,9 @@ function Dashboard() {
           style={{
             display: 'block',
             padding: '20px',
-            backgroundColor: '#28a745',
+            backgroundColor: 'var(--green-button)',
             color: 'white',
+            border: 'none',
             textAlign: 'center',
             textDecoration: 'none',
             borderRadius: '8px',
@@ -126,6 +147,7 @@ function Dashboard() {
           Create New Snippet
         </Link>
       </div>
+    </div>
     </div>
   );
 }
