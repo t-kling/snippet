@@ -7,10 +7,12 @@
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'showToast') {
     showToast(request.message, request.preview, request.type);
+    sendResponse({ success: true });
   } else if (request.action === 'getSelection') {
     const selectedText = window.getSelection().toString().trim();
     sendResponse({ selectedText });
   }
+  return true; // Keep channel open for async responses
 });
 
 /**
