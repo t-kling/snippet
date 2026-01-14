@@ -98,7 +98,7 @@ const getSnippets = async (req, res) => {
   try {
     const { sortBy = 'created_at', order = 'desc', inQueue, toEdit, topic, source } = req.query;
 
-    const validSortFields = ['created_at', 'updated_at', 'title'];
+    const validSortFields = ['created_at', 'updated_at', 'title', 'priority'];
     const sortField = validSortFields.includes(sortBy) ? sortBy : 'created_at';
     const sortOrder = order === 'asc' ? 'ASC' : 'DESC';
 
@@ -145,7 +145,17 @@ const getSnippets = async (req, res) => {
       paramIndex++;
     }
 
-    query += ` GROUP BY s.id, r.next_review_date ORDER BY s.${sortField} ${sortOrder}`;
+    // Special handling for priority sorting
+    if (sortField === 'priority') {
+      query += ` GROUP BY s.id, r.next_review_date ORDER BY
+        CASE COALESCE(s.priority, 'medium')
+          WHEN 'high' THEN 1
+          WHEN 'medium' THEN 2
+          WHEN 'low' THEN 3
+        END ${sortOrder}`;
+    } else {
+      query += ` GROUP BY s.id, r.next_review_date ORDER BY s.${sortField} ${sortOrder}`;
+    }
 
     const result = await db.query(query, params);
     res.json(result.rows);

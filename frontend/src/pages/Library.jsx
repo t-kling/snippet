@@ -556,6 +556,7 @@ function Library() {
             <option value="created_at">Date Created</option>
             <option value="updated_at">Date Modified</option>
             <option value="title">Title</option>
+            <option value="priority">Priority</option>
           </select>
         </div>
 
