@@ -28,6 +28,7 @@ function SnippetEditor() {
     page: '',
     timestamp: '',
     whyMadeThis: '',
+    parentSnippet: '',
   });
 
   const [topicInput, setTopicInput] = useState('');
@@ -114,6 +115,7 @@ function SnippetEditor() {
         page: snippet.page || '',
         timestamp: snippet.timestamp || '',
         whyMadeThis: snippet.why_made_this || '',
+        parentSnippet: snippet.parent_snippet || '',
       });
     } catch (error) {
       setError('Failed to load snippet');
@@ -373,6 +375,41 @@ function SnippetEditor() {
       navigate('/library');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to save snippet');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMakeCopy = async () => {
+    setError('');
+    setLoading(true);
+
+    try {
+      // First, save the current snippet if we're editing
+      if (isEditing) {
+        const payload = {
+          ...formData,
+          clozeData: [],
+        };
+        await snippetAPI.update(id, payload);
+      }
+
+      // Create a copy with modified fields
+      const copyPayload = {
+        ...formData,
+        title: formData.title ? `${formData.title} (copy)` : '(copy)',
+        type: 'revised',
+        parentSnippet: formData.title || '',
+        clozeData: [],
+      };
+
+      const response = await snippetAPI.create(copyPayload);
+      const newSnippetId = response.data.id;
+
+      // Navigate to the edit screen for the new copy
+      navigate(`/snippet/${newSnippetId}/edit`);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Failed to create copy');
     } finally {
       setLoading(false);
     }
@@ -962,6 +999,39 @@ function SnippetEditor() {
         </div>
 
         {error && <div style={{ color: 'var(--again-red)', fontSize: '14px', fontWeight: 'bold' }}>{error}</div>}
+
+        {isEditing && (
+          <div>
+            <button
+              type="button"
+              onClick={handleMakeCopy}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '10px',
+                fontSize: '14px',
+                backgroundColor: '#60a5fa',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                opacity: loading ? 0.6 : 1,
+              }}
+            >
+              Make Copy Snippet
+            </button>
+            <small style={{
+              display: 'block',
+              marginTop: '6px',
+              color: 'var(--text-secondary)',
+              fontSize: '13px',
+              textAlign: 'center'
+            }}>
+              Use this to streamline complicated material or rephrase in your own words
+            </small>
+          </div>
+        )}
 
         <div style={{ display: 'flex', gap: '10px' }}>
           <button

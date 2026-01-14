@@ -2,7 +2,7 @@ const db = require('../db');
 
 const createSnippet = async (req, res) => {
   try {
-    const { title, type, source, content, clozeData, topics, inQueue, toEdit, imageData, imageClozes, author, url, page, timestamp, whyMadeThis } = req.body;
+    const { title, type, source, content, clozeData, topics, inQueue, toEdit, imageData, imageClozes, author, url, page, timestamp, whyMadeThis, parentSnippet } = req.body;
 
     // Require either content or imageData
     if (!type || (!content && !imageData)) {
@@ -40,10 +40,10 @@ const createSnippet = async (req, res) => {
 
     // Create snippet
     const snippetResult = await db.query(
-      `INSERT INTO snippets (user_id, title, type, source, content, cloze_data, in_queue, to_edit, image_data, image_clozes, author, url, page, timestamp, why_made_this)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      `INSERT INTO snippets (user_id, title, type, source, content, cloze_data, in_queue, to_edit, image_data, image_clozes, author, url, page, timestamp, why_made_this, parent_snippet)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
        RETURNING *`,
-      [req.userId, snippetTitle, type, source || null, content || '', JSON.stringify(clozeData || []), inQueue !== false, toEdit || false, imageData || null, JSON.stringify(imageClozes || []), author || null, url || null, page || null, timestamp || null, whyMadeThis || null]
+      [req.userId, snippetTitle, type, source || null, content || '', JSON.stringify(clozeData || []), inQueue !== false, toEdit || false, imageData || null, JSON.stringify(imageClozes || []), author || null, url || null, page || null, timestamp || null, whyMadeThis || null, parentSnippet || null]
     );
 
     const snippet = snippetResult.rows[0];
@@ -192,7 +192,7 @@ const getSnippet = async (req, res) => {
 
 const updateSnippet = async (req, res) => {
   try {
-    const { title, type, source, content, clozeData, topics, inQueue, toEdit, imageData, imageClozes, author, url, page, timestamp, whyMadeThis } = req.body;
+    const { title, type, source, content, clozeData, topics, inQueue, toEdit, imageData, imageClozes, author, url, page, timestamp, whyMadeThis, parentSnippet } = req.body;
 
     // Check ownership
     const existing = await db.query(
@@ -218,8 +218,8 @@ const updateSnippet = async (req, res) => {
     // Update snippet
     const result = await db.query(
       `UPDATE snippets
-       SET title = $1, type = $2, source = $3, content = $4, cloze_data = $5, in_queue = $6, to_edit = $7, image_data = $8, image_clozes = $9, author = $10, url = $11, page = $12, timestamp = $13, why_made_this = $14
-       WHERE id = $15 AND user_id = $16
+       SET title = $1, type = $2, source = $3, content = $4, cloze_data = $5, in_queue = $6, to_edit = $7, image_data = $8, image_clozes = $9, author = $10, url = $11, page = $12, timestamp = $13, why_made_this = $14, parent_snippet = $15
+       WHERE id = $16 AND user_id = $17
        RETURNING *`,
       [
         title !== undefined ? title : oldSnippet.title,
@@ -236,6 +236,7 @@ const updateSnippet = async (req, res) => {
         page !== undefined ? page : oldSnippet.page,
         timestamp !== undefined ? timestamp : oldSnippet.timestamp,
         whyMadeThis !== undefined ? whyMadeThis : oldSnippet.why_made_this,
+        parentSnippet !== undefined ? parentSnippet : oldSnippet.parent_snippet,
         req.params.id,
         req.userId,
       ]
