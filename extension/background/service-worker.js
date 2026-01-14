@@ -195,6 +195,8 @@ async function handleQuickSave(info, tab) {
 
     await createSnippet(snippetData);
 
+    console.log('[Snippet Extension] Snippet created, sending toast to tab:', tab.id);
+
     // Show success toast
     chrome.tabs.sendMessage(tab.id, {
       action: 'showToast',
@@ -204,7 +206,9 @@ async function handleQuickSave(info, tab) {
     }, (response) => {
       // Check if message was received
       if (chrome.runtime.lastError) {
-        console.warn('Toast message failed:', chrome.runtime.lastError.message);
+        console.error('[Snippet Extension] Toast message failed:', chrome.runtime.lastError.message);
+      } else {
+        console.log('[Snippet Extension] Toast message sent successfully:', response);
       }
     });
   } catch (error) {
