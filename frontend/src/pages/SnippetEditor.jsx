@@ -328,15 +328,28 @@ function SnippetEditor() {
       const suggestedKeywords = response.data.suggestions;
 
       if (suggestedKeywords && suggestedKeywords.length > 0) {
+        // Find the highest existing cloze number
+        const existingClozes = formData.content.match(/\{\{c(\d+)::/g) || [];
+        const maxClozeNum = existingClozes.reduce((max, match) => {
+          const num = parseInt(match.match(/\d+/)[0]);
+          return num > max ? num : max;
+        }, 0);
+
         // Apply cloze deletions to the suggested keywords in the content
         let newContent = formData.content;
         let clozeCount = 0;
 
         suggestedKeywords.forEach(keyword => {
-          // Find and replace first occurrence of each keyword with cloze syntax
-          const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          // Escape special regex characters in the keyword
+          const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+          // Match the keyword only if it's not already inside a cloze deletion
+          // Use negative lookahead to avoid matching text inside {{c...::...}}
+          const regex = new RegExp(`\\b${escapedKeyword}\\b(?![^{]*}}})`, 'i');
+
           if (regex.test(newContent)) {
-            newContent = newContent.replace(regex, `{{c${clozeCount + 1}::${keyword}}}`);
+            const newClozeNum = maxClozeNum + clozeCount + 1;
+            newContent = newContent.replace(regex, `{{c${newClozeNum}::${keyword}}}`);
             clozeCount++;
           }
         });
@@ -345,7 +358,7 @@ function SnippetEditor() {
           setFormData({ ...formData, content: newContent });
           alert(`Added ${clozeCount} cloze deletion(s) to your content!`);
         } else {
-          alert('Could not find suggested keywords in your content.');
+          alert('Could not find suggested keywords in your content (or all were already clozed).');
         }
       } else {
         alert('No cloze keyword suggestions generated.');
