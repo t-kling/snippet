@@ -10,7 +10,7 @@ function SettingsDropdown() {
   const [clearing, setClearing] = useState(false);
   const dropdownRef = useRef(null);
   const fileInputRef = useRef(null);
-  const { theme, font, toggleTheme, changeFont } = useSettings();
+  const { theme, font, showWhyMadeThis, toggleTheme, changeFont, toggleShowWhyMadeThis } = useSettings();
   const navigate = useNavigate();
 
   // Close dropdown when clicking outside
@@ -200,6 +200,24 @@ function SettingsDropdown() {
                   </option>
                 ))}
               </select>
+            </div>
+
+            {/* Editor Options */}
+            <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                EDITOR
+              </div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '8px 0' }}>
+                <input
+                  type="checkbox"
+                  checked={showWhyMadeThis}
+                  onChange={toggleShowWhyMadeThis}
+                  style={{ cursor: 'pointer' }}
+                />
+                <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>
+                  Show "Why I Made This" field
+                </span>
+              </label>
             </div>
 
             {/* Stats Link */}

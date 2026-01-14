@@ -39,6 +39,7 @@ export const snippetAPI = {
   toggleNeedsWork: (id, needsWork) => apiClient.patch(`/snippets/${id}/needs-work`, { needsWork }),
   exportLibrary: () => apiClient.get('/snippets/export'),
   importLibrary: (data) => apiClient.post('/snippets/import', data),
+  bulkUpdatePriority: (snippetIds, priority) => apiClient.post('/snippets/bulk-priority', { snippetIds, priority }),
 };
 
 // Review API

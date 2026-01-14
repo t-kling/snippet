@@ -27,6 +27,11 @@ export function SettingsProvider({ children }) {
     return localStorage.getItem('font') || 'inter';
   });
 
+  const [showWhyMadeThis, setShowWhyMadeThis] = useState(() => {
+    const saved = localStorage.getItem('showWhyMadeThis');
+    return saved === null ? true : saved === 'true';
+  });
+
   useEffect(() => {
     // Apply theme to document
     document.documentElement.setAttribute('data-theme', theme);
@@ -39,6 +44,10 @@ export function SettingsProvider({ children }) {
     localStorage.setItem('font', font);
   }, [font]);
 
+  useEffect(() => {
+    localStorage.setItem('showWhyMadeThis', showWhyMadeThis);
+  }, [showWhyMadeThis]);
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
@@ -49,11 +58,17 @@ export function SettingsProvider({ children }) {
     }
   };
 
+  const toggleShowWhyMadeThis = () => {
+    setShowWhyMadeThis(prev => !prev);
+  };
+
   const value = {
     theme,
     font,
+    showWhyMadeThis,
     toggleTheme,
     changeFont,
+    toggleShowWhyMadeThis,
   };
 
   return (

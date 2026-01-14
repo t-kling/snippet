@@ -131,6 +131,18 @@ function Library() {
     }
   };
 
+  const handleBulkPriorityUpdate = async (priority) => {
+    if (!selectedSnippets.length) return;
+
+    try {
+      await snippetAPI.bulkUpdatePriority(selectedSnippets, priority);
+      await loadSnippets();
+      setSelectedSnippets([]);
+    } catch (error) {
+      alert('Failed to update priority');
+    }
+  };
+
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setIsSearchMode(false);
@@ -373,6 +385,52 @@ function Library() {
               }}
             >
               Mark Complete
+            </button>
+            <span style={{ borderLeft: '2px solid var(--border-color)', height: '30px' }}></span>
+            <button
+              onClick={() => handleBulkPriorityUpdate('high')}
+              style={{
+                padding: '6px 12px',
+                fontSize: '14px',
+                backgroundColor: '#dc2626',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+              }}
+            >
+              Priority: High
+            </button>
+            <button
+              onClick={() => handleBulkPriorityUpdate('medium')}
+              style={{
+                padding: '6px 12px',
+                fontSize: '14px',
+                backgroundColor: '#f59e0b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+              }}
+            >
+              Priority: Medium
+            </button>
+            <button
+              onClick={() => handleBulkPriorityUpdate('low')}
+              style={{
+                padding: '6px 12px',
+                fontSize: '14px',
+                backgroundColor: '#64748b',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+              }}
+            >
+              Priority: Low
             </button>
             <button
               onClick={() => setBulkOperation('addTopic')}

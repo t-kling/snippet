@@ -37,6 +37,7 @@ CREATE TABLE snippets (
   timestamp TEXT,
   why_made_this TEXT,
   parent_snippet TEXT,
+  priority VARCHAR(10) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

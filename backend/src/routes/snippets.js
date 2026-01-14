@@ -10,6 +10,7 @@ const {
   getSources,
   exportLibrary,
   importLibrary,
+  bulkUpdatePriority,
 } = require('../controllers/snippetController');
 const authMiddleware = require('../middleware/auth');
 
@@ -23,6 +24,7 @@ router.get('/', getSnippets);
 router.get('/sources', getSources);
 router.get('/export', exportLibrary);
 router.post('/import', importLibrary);
+router.post('/bulk-priority', bulkUpdatePriority);
 router.get('/:id', getSnippet);
 router.put('/:id', updateSnippet);
 router.delete('/:id', deleteSnippet);

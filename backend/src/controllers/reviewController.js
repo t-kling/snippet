@@ -48,13 +48,34 @@ const getDueCards = async (req, res) => {
 
     query += ' GROUP BY s.id, r.ease_factor, r.interval, r.repetitions, r.next_review_date';
 
-    // Order based on mode
+    // Order based on mode (priority comes first in all modes)
     if (mode === 'browse') {
-      query += ' ORDER BY r.next_review_date ASC';
+      query += ` ORDER BY
+        CASE s.priority
+          WHEN 'high' THEN 1
+          WHEN 'medium' THEN 2
+          WHEN 'low' THEN 3
+          ELSE 2
+        END,
+        r.next_review_date ASC`;
     } else if (mode === 'appreciation') {
-      query += ' ORDER BY RANDOM()';
+      query += ` ORDER BY
+        CASE s.priority
+          WHEN 'high' THEN 1
+          WHEN 'medium' THEN 2
+          WHEN 'low' THEN 3
+          ELSE 2
+        END,
+        RANDOM()`;
     } else {
-      query += ' ORDER BY r.next_review_date ASC';
+      query += ` ORDER BY
+        CASE s.priority
+          WHEN 'high' THEN 1
+          WHEN 'medium' THEN 2
+          WHEN 'low' THEN 3
+          ELSE 2
+        END,
+        r.next_review_date ASC`;
     }
 
     console.log('Final query:', query);

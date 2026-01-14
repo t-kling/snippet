@@ -2,7 +2,7 @@ const db = require('../db');
 
 const createSnippet = async (req, res) => {
   try {
-    const { title, type, source, content, clozeData, topics, inQueue, toEdit, imageData, imageClozes, author, url, page, timestamp, whyMadeThis, parentSnippet } = req.body;
+    const { title, type, source, content, clozeData, topics, inQueue, toEdit, imageData, imageClozes, author, url, page, timestamp, whyMadeThis, parentSnippet, priority } = req.body;
 
     // Require either content or imageData
     if (!type || (!content && !imageData)) {
@@ -40,10 +40,10 @@ const createSnippet = async (req, res) => {
 
     // Create snippet
     const snippetResult = await db.query(
-      `INSERT INTO snippets (user_id, title, type, source, content, cloze_data, in_queue, to_edit, image_data, image_clozes, author, url, page, timestamp, why_made_this, parent_snippet)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+      `INSERT INTO snippets (user_id, title, type, source, content, cloze_data, in_queue, to_edit, image_data, image_clozes, author, url, page, timestamp, why_made_this, parent_snippet, priority)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
        RETURNING *`,
-      [req.userId, snippetTitle, type, source || null, content || '', JSON.stringify(clozeData || []), inQueue !== false, toEdit || false, imageData || null, JSON.stringify(imageClozes || []), author || null, url || null, page || null, timestamp || null, whyMadeThis || null, parentSnippet || null]
+      [req.userId, snippetTitle, type, source || null, content || '', JSON.stringify(clozeData || []), inQueue !== false, toEdit || false, imageData || null, JSON.stringify(imageClozes || []), author || null, url || null, page || null, timestamp || null, whyMadeThis || null, parentSnippet || null, priority || 'medium']
     );
 
     const snippet = snippetResult.rows[0];
@@ -192,7 +192,7 @@ const getSnippet = async (req, res) => {
 
 const updateSnippet = async (req, res) => {
   try {
-    const { title, type, source, content, clozeData, topics, inQueue, toEdit, imageData, imageClozes, author, url, page, timestamp, whyMadeThis, parentSnippet } = req.body;
+    const { title, type, source, content, clozeData, topics, inQueue, toEdit, imageData, imageClozes, author, url, page, timestamp, whyMadeThis, parentSnippet, priority } = req.body;
 
     // Check ownership
     const existing = await db.query(
@@ -218,8 +218,8 @@ const updateSnippet = async (req, res) => {
     // Update snippet
     const result = await db.query(
       `UPDATE snippets
-       SET title = $1, type = $2, source = $3, content = $4, cloze_data = $5, in_queue = $6, to_edit = $7, image_data = $8, image_clozes = $9, author = $10, url = $11, page = $12, timestamp = $13, why_made_this = $14, parent_snippet = $15
-       WHERE id = $16 AND user_id = $17
+       SET title = $1, type = $2, source = $3, content = $4, cloze_data = $5, in_queue = $6, to_edit = $7, image_data = $8, image_clozes = $9, author = $10, url = $11, page = $12, timestamp = $13, why_made_this = $14, parent_snippet = $15, priority = $16
+       WHERE id = $17 AND user_id = $18
        RETURNING *`,
       [
         title !== undefined ? title : oldSnippet.title,
@@ -237,6 +237,7 @@ const updateSnippet = async (req, res) => {
         timestamp !== undefined ? timestamp : oldSnippet.timestamp,
         whyMadeThis !== undefined ? whyMadeThis : oldSnippet.why_made_this,
         parentSnippet !== undefined ? parentSnippet : oldSnippet.parent_snippet,
+        priority !== undefined ? priority : oldSnippet.priority,
         req.params.id,
         req.userId,
       ]
@@ -544,6 +545,37 @@ const importLibrary = async (req, res) => {
   }
 };
 
+const bulkUpdatePriority = async (req, res) => {
+  try {
+    const { snippetIds, priority } = req.body;
+
+    if (!snippetIds || !Array.isArray(snippetIds) || snippetIds.length === 0) {
+      return res.status(400).json({ error: 'Snippet IDs array is required' });
+    }
+
+    if (!['low', 'medium', 'high'].includes(priority)) {
+      return res.status(400).json({ error: 'Invalid priority value' });
+    }
+
+    // Update priority for all specified snippets that belong to the user
+    const result = await db.query(
+      `UPDATE snippets
+       SET priority = $1
+       WHERE id = ANY($2) AND user_id = $3
+       RETURNING id`,
+      [priority, snippetIds, req.userId]
+    );
+
+    res.json({
+      message: 'Priority updated successfully',
+      updatedCount: result.rows.length
+    });
+  } catch (error) {
+    console.error('Bulk update priority error:', error);
+    res.status(500).json({ error: 'Failed to update priority' });
+  }
+};
+
 module.exports = {
   createSnippet,
   getSnippets,
@@ -555,4 +587,5 @@ module.exports = {
   getSources,
   exportLibrary,
   importLibrary,
+  bulkUpdatePriority,
 };

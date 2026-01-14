@@ -6,12 +6,14 @@ import { compressImage } from '../utils/imageCompression';
 import { insertMath } from '../utils/latex';
 import ImageClozeEditor from '../components/ImageClozeEditor';
 import Header from '../components/Header';
+import { useSettings } from '../contexts/SettingsContext';
 
 function SnippetEditor() {
   const { id } = useParams();
   const navigate = useNavigate();
   const textareaRef = useRef(null);
   const isEditing = !!id;
+  const { showWhyMadeThis } = useSettings();
 
   const [formData, setFormData] = useState({
     title: '',
@@ -29,6 +31,7 @@ function SnippetEditor() {
     timestamp: '',
     whyMadeThis: '',
     parentSnippet: '',
+    priority: 'medium',
   });
 
   const [topicInput, setTopicInput] = useState('');
@@ -116,6 +119,7 @@ function SnippetEditor() {
         timestamp: snippet.timestamp || '',
         whyMadeThis: snippet.why_made_this || '',
         parentSnippet: snippet.parent_snippet || '',
+        priority: snippet.priority || 'medium',
       });
     } catch (error) {
       setError('Failed to load snippet');
@@ -979,7 +983,7 @@ function SnippetEditor() {
           </button>
         </div>
 
-        <div style={{ display: 'flex', gap: '20px' }}>
+        <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
           <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
             <input
               type="checkbox"
@@ -997,30 +1001,53 @@ function SnippetEditor() {
             />
             <span>To edit</span>
           </label>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <label htmlFor="priority" style={{ fontWeight: 'bold' }}>Priority:</label>
+            <select
+              id="priority"
+              value={formData.priority}
+              onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+              style={{
+                padding: '6px 12px',
+                fontSize: '14px',
+                border: '2px solid var(--border-color)',
+                backgroundColor: '#FFF',
+                borderRadius: '4px',
+                cursor: 'pointer',
+              }}
+            >
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
         </div>
 
-        <div>
-          <label htmlFor="whyMadeThis" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Why I Made This (optional)
-          </label>
-          <textarea
-            id="whyMadeThis"
-            value={formData.whyMadeThis}
-            onChange={(e) => setFormData({ ...formData, whyMadeThis: e.target.value })}
-            placeholder="Personal note about why you created this card..."
-            rows={3}
-            style={{
-              width: '100%',
-              padding: '8px',
-              fontSize: '14px',
-              border: '2px solid var(--border-color)',
-              backgroundColor: '#FFF',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-              resize: 'vertical',
-            }}
-          />
-        </div>
+        {showWhyMadeThis && (
+          <div>
+            <label htmlFor="whyMadeThis" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Why I Made This (optional)
+            </label>
+            <textarea
+              id="whyMadeThis"
+              value={formData.whyMadeThis}
+              onChange={(e) => setFormData({ ...formData, whyMadeThis: e.target.value })}
+              placeholder="Personal note about why you created this card..."
+              rows={3}
+              style={{
+                width: '100%',
+                padding: '8px',
+                fontSize: '14px',
+                border: '2px solid var(--border-color)',
+                backgroundColor: '#FFF',
+                borderRadius: '4px',
+                fontFamily: 'inherit',
+                resize: 'vertical',
+              }}
+            />
+          </div>
+        )}
 
         {error && <div style={{ color: 'var(--again-red)', fontSize: '14px', fontWeight: 'bold' }}>{error}</div>}
 
