@@ -49,31 +49,30 @@ const getDueCards = async (req, res) => {
     query += ' GROUP BY s.id, r.ease_factor, r.interval, r.repetitions, r.next_review_date';
 
     // Order based on mode (priority comes first in all modes)
+    // Within each priority level: study/browse by due date, appreciation randomly
     if (mode === 'browse') {
       query += ` ORDER BY
-        CASE s.priority
+        CASE COALESCE(s.priority, 'medium')
           WHEN 'high' THEN 1
           WHEN 'medium' THEN 2
           WHEN 'low' THEN 3
-          ELSE 2
         END,
         r.next_review_date ASC`;
     } else if (mode === 'appreciation') {
       query += ` ORDER BY
-        CASE s.priority
+        CASE COALESCE(s.priority, 'medium')
           WHEN 'high' THEN 1
           WHEN 'medium' THEN 2
           WHEN 'low' THEN 3
-          ELSE 2
         END,
         RANDOM()`;
     } else {
+      // Study mode
       query += ` ORDER BY
-        CASE s.priority
+        CASE COALESCE(s.priority, 'medium')
           WHEN 'high' THEN 1
           WHEN 'medium' THEN 2
           WHEN 'low' THEN 3
-          ELSE 2
         END,
         r.next_review_date ASC`;
     }
