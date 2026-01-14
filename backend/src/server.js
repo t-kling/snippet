@@ -11,7 +11,26 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://snippet-flame-three.vercel.app',
+  'https://snippet-87r2qzdwq-ts-projects-6ca481a2.vercel.app'
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // Allow for now, can change to false later
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 
 // Routes
