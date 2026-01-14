@@ -3,8 +3,76 @@
  * Handles context menus, keyboard shortcuts, and API communication
  */
 
-import { initializeAPI, isLoggedIn, createSnippet } from '../utils/api.js';
-import { cleanUrl } from '../utils/url-cleaner.js';
+// ========== API Utilities (inlined) ==========
+
+const API_URLS = {
+  local: 'http://localhost:5001/api',
+  production: 'https://snippet-api.vercel.app/api'
+};
+
+let API_BASE_URL = API_URLS.local;
+
+async function initializeAPI() {
+  const { apiUrl } = await chrome.storage.local.get(['apiUrl']);
+  if (apiUrl) {
+    API_BASE_URL = apiUrl;
+  }
+}
+
+async function getAuthToken() {
+  const { jwtToken } = await chrome.storage.local.get(['jwtToken']);
+  return jwtToken;
+}
+
+async function isLoggedIn() {
+  const token = await getAuthToken();
+  return !!token;
+}
+
+async function createSnippet(snippetData) {
+  const token = await getAuthToken();
+  if (!token) {
+    throw new Error('Not authenticated');
+  }
+
+  const response = await fetch(`${API_BASE_URL}/snippets`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify(snippetData)
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      await chrome.storage.local.remove(['jwtToken']);
+      throw new Error('Session expired. Please login again.');
+    }
+    const error = await response.json();
+    throw new Error(error.error || 'Failed to create snippet');
+  }
+
+  return await response.json();
+}
+
+// ========== URL Cleaner Utilities (inlined) ==========
+
+function cleanUrl(url) {
+  try {
+    const urlObj = new URL(url);
+    const paramsToRemove = [
+      'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content',
+      'fbclid', 'gclid', 'msclkid', 'ref', 'referrer', 'source', '_ga', 'mc_cid', 'mc_eid'
+    ];
+    paramsToRemove.forEach(param => urlObj.searchParams.delete(param));
+    return urlObj.toString();
+  } catch (error) {
+    return url;
+  }
+}
+
+// ========== Service Worker Logic ==========
 
 // Initialize API on extension load
 initializeAPI();
