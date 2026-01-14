@@ -298,155 +298,199 @@ function Library() {
 
         {selectedSnippets.length > 0 && (
           <div style={{
-            padding: '15px',
+            padding: '20px',
             marginBottom: '20px',
             backgroundColor: 'var(--bg-secondary)',
-            border: '2px solid var(--blue-button)',
+            border: '2px solid var(--border-color)',
             borderRadius: '8px',
-            display: 'flex',
-            gap: '10px',
-            alignItems: 'center',
-            flexWrap: 'wrap',
           }}>
-            <span style={{ fontWeight: 'bold', color: 'var(--text-primary)' }}>
-              {selectedSnippets.length} selected
-            </span>
-            <button
-              onClick={handleBulkDelete}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: 'var(--again-red)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Delete
-            </button>
-            <button
-              onClick={() => handleBulkUpdate({ inQueue: true })}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: 'var(--blue-button)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Add to Queue
-            </button>
-            <button
-              onClick={() => handleBulkUpdate({ inQueue: false })}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: 'var(--text-secondary)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Remove from Queue
-            </button>
-            <button
-              onClick={() => handleBulkUpdate({ toEdit: true })}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: 'var(--hard-orange)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Mark To Edit
-            </button>
-            <button
-              onClick={() => handleBulkUpdate({ toEdit: false })}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: 'var(--good-green)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Mark Complete
-            </button>
-            <span style={{ borderLeft: '2px solid var(--border-color)', height: '30px' }}></span>
-            <button
-              onClick={() => handleBulkPriorityUpdate('high')}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: '#dc2626',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Priority: High
-            </button>
-            <button
-              onClick={() => handleBulkPriorityUpdate('medium')}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: '#f59e0b',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Priority: Medium
-            </button>
-            <button
-              onClick={() => handleBulkPriorityUpdate('low')}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: '#64748b',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Priority: Low
-            </button>
-            <button
-              onClick={() => setBulkOperation('addTopic')}
-              style={{
-                padding: '6px 12px',
-                fontSize: '14px',
-                backgroundColor: 'var(--text-primary)',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontWeight: 'bold',
-              }}
-            >
-              Add Topic
-            </button>
+            <div style={{ marginBottom: '15px', fontWeight: 'bold', color: 'var(--text-primary)', fontSize: '15px' }}>
+              {selectedSnippets.length} snippet{selectedSnippets.length === 1 ? '' : 's'} selected
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+              {/* Queue Management */}
+              <div style={{
+                padding: '12px',
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  QUEUE
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <button
+                    onClick={() => handleBulkUpdate({ inQueue: true })}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Add to Queue
+                  </button>
+                  <button
+                    onClick={() => handleBulkUpdate({ inQueue: false })}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Remove from Queue
+                  </button>
+                </div>
+              </div>
+
+              {/* Edit Status */}
+              <div style={{
+                padding: '12px',
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  EDIT STATUS
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <button
+                    onClick={() => handleBulkUpdate({ toEdit: true })}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Mark To Edit
+                  </button>
+                  <button
+                    onClick={() => handleBulkUpdate({ toEdit: false })}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Mark Complete
+                  </button>
+                </div>
+              </div>
+
+              {/* Priority */}
+              <div style={{
+                padding: '12px',
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  PRIORITY
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <button
+                    onClick={() => handleBulkPriorityUpdate('high')}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    High
+                  </button>
+                  <button
+                    onClick={() => handleBulkPriorityUpdate('medium')}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Medium
+                  </button>
+                  <button
+                    onClick={() => handleBulkPriorityUpdate('low')}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Low
+                  </button>
+                </div>
+              </div>
+
+              {/* Other Actions */}
+              <div style={{
+                padding: '12px',
+                backgroundColor: 'var(--bg-primary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '6px',
+              }}>
+                <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                  OTHER ACTIONS
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <button
+                    onClick={() => setBulkOperation('addTopic')}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: 'var(--text-primary)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Add Topic
+                  </button>
+                  <button
+                    onClick={handleBulkDelete}
+                    style={{
+                      padding: '6px 12px',
+                      fontSize: '13px',
+                      backgroundColor: '#fff',
+                      color: '#dc2626',
+                      border: '1px solid #dc2626',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -715,10 +759,21 @@ function Library() {
                         backgroundColor: 'var(--hard-orange)',
                         color: 'white',
                         borderRadius: '10px',
+                        marginRight: '8px',
                       }}>
                         To Edit
                       </span>
                     )}
+                    <span style={{
+                      padding: '2px 8px',
+                      backgroundColor: snippet.priority === 'high' ? '#dc2626' : snippet.priority === 'low' ? '#64748b' : '#f59e0b',
+                      color: 'white',
+                      borderRadius: '10px',
+                      marginRight: '8px',
+                      textTransform: 'capitalize',
+                    }}>
+                      {snippet.priority || 'medium'} Priority
+                    </span>
                   </div>
                   </div>
                 </div>

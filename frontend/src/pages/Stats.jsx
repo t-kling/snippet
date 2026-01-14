@@ -107,6 +107,33 @@ function Stats() {
           </div>
         )}
 
+        {/* Priority Distribution */}
+        {stats && (
+          <div style={{
+            padding: '20px',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '2px solid var(--border-color)',
+            borderRadius: '8px',
+            marginBottom: '30px',
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: '20px', color: 'var(--text-primary)' }}>Priority Distribution</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px' }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#dc2626' }}>{stats.high_priority}</div>
+                <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>High Priority</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#f59e0b' }}>{stats.medium_priority}</div>
+                <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Medium Priority</div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: '32px', fontWeight: 'bold', color: '#64748b' }}>{stats.low_priority}</div>
+                <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Low Priority</div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Card Maturity Distribution */}
         <div style={{
           padding: '20px',

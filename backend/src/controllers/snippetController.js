@@ -149,9 +149,9 @@ const getSnippets = async (req, res) => {
     if (sortField === 'priority') {
       query += ` GROUP BY s.id, r.next_review_date ORDER BY
         CASE COALESCE(s.priority, 'medium')
-          WHEN 'high' THEN 1
+          WHEN 'low' THEN 1
           WHEN 'medium' THEN 2
-          WHEN 'low' THEN 3
+          WHEN 'high' THEN 3
         END ${sortOrder}`;
     } else {
       query += ` GROUP BY s.id, r.next_review_date ORDER BY s.${sortField} ${sortOrder}`;

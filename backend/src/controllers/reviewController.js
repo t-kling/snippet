@@ -166,6 +166,9 @@ const getStats = async (req, res) => {
          COUNT(*) FILTER (WHERE s.in_queue = true) as total_in_queue,
          COUNT(*) FILTER (WHERE s.in_queue = true AND r.next_review_date <= NOW()) as due_today,
          COUNT(*) FILTER (WHERE s.to_edit = true) as to_edit,
+         COUNT(*) FILTER (WHERE COALESCE(s.priority, 'medium') = 'high') as high_priority,
+         COUNT(*) FILTER (WHERE COALESCE(s.priority, 'medium') = 'medium') as medium_priority,
+         COUNT(*) FILTER (WHERE COALESCE(s.priority, 'medium') = 'low') as low_priority,
          COUNT(*) as total_snippets
        FROM snippets s
        LEFT JOIN reviews r ON s.id = r.snippet_id
