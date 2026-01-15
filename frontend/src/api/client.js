@@ -62,6 +62,7 @@ export const aiAPI = {
   suggestTopics: (content) => apiClient.post('/ai/suggest-topics', { content }),
   search: (query) => apiClient.post('/ai/search', { query }),
   suggestCloze: (content) => apiClient.post('/ai/suggest-cloze', { content }),
+  cleanupText: (content) => apiClient.post('/ai/cleanup-text', { content }),
 };
 
 export default apiClient;

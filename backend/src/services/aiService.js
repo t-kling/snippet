@@ -265,9 +265,48 @@ ${content}`
   }
 };
 
+/**
+ * Clean up text formatting (whitespace, line breaks, special characters)
+ * Does NOT fix spelling or grammar
+ * @param {string} content - The text content to clean up
+ * @returns {Promise<string>} Cleaned up text
+ */
+const cleanupFormatting = async (content) => {
+  const client = getOpenAIClient();
+
+  if (!client) {
+    throw new Error('OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file.');
+  }
+
+  try {
+    const response = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "You are a text formatting assistant. Your job is to clean up text formatting ONLY. Do NOT fix spelling, grammar, or change any words. Only fix:\n- Excessive whitespace (multiple spaces, tabs)\n- Inconsistent or weird line breaks\n- Special characters that seem like encoding errors or copy-paste artifacts (e.g., \u00a0, weird Unicode)\n- Normalize quotation marks and apostrophes to standard ASCII when they appear to be smart quotes artifacts\n\nPreserve:\n- The exact wording and spelling (even if incorrect)\n- Intentional formatting like bullet points, numbered lists\n- Mathematical notation and LaTeX\n- Cloze deletions ({{c1::text}})\n- Line breaks that are clearly intentional (between paragraphs, after headings)\n\nReturn ONLY the cleaned text, nothing else."
+        },
+        {
+          role: "user",
+          content: `Clean up the formatting of this text. Remember: do NOT fix spelling or grammar, only fix whitespace, line breaks, and weird special characters.\n\n${content}`
+        },
+      ],
+      max_tokens: 3000,
+      temperature: 0.1, // Very low temperature for consistent formatting
+    });
+
+    const cleanedText = response.choices[0].message.content.trim();
+    return cleanedText;
+  } catch (error) {
+    console.error('Text cleanup error:', error);
+    throw new Error('Failed to clean up text: ' + error.message);
+  }
+};
+
 module.exports = {
   extractTextFromImage,
   suggestTopics,
   searchSnippets,
   suggestClozeKeywords,
+  cleanupFormatting,
 };

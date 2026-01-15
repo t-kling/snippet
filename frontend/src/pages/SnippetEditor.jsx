@@ -46,6 +46,7 @@ function SnippetEditor() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [topicSuggestionLoading, setTopicSuggestionLoading] = useState(false);
   const [clozeSuggestionLoading, setClozeSuggestionLoading] = useState(false);
+  const [cleanupLoading, setCleanupLoading] = useState(false);
   const [sourceInfoExpanded, setSourceInfoExpanded] = useState(true);
 
   useEffect(() => {
@@ -369,6 +370,32 @@ function SnippetEditor() {
       alert(errorMessage);
     } finally {
       setClozeSuggestionLoading(false);
+    }
+  };
+
+  const handleCleanupText = async () => {
+    if (!formData.content) {
+      alert('Please add some content first to clean up formatting.');
+      return;
+    }
+
+    setCleanupLoading(true);
+    try {
+      const response = await aiAPI.cleanupText(formData.content);
+      const cleanedText = response.data.cleanedText;
+
+      if (cleanedText) {
+        setFormData({ ...formData, content: cleanedText });
+        alert('Text formatting cleaned up! Review the changes and adjust if needed.');
+      } else {
+        alert('No changes needed - text looks good!');
+      }
+    } catch (error) {
+      console.error('Text cleanup error:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to clean up text formatting';
+      alert(errorMessage);
+    } finally {
+      setCleanupLoading(false);
     }
   };
 
@@ -722,6 +749,24 @@ function SnippetEditor() {
                 }}
               >
                 {clozeSuggestionLoading ? 'Suggesting...' : '✨ Auto-Cloze'}
+              </button>
+              <button
+                type="button"
+                onClick={handleCleanupText}
+                disabled={cleanupLoading || !formData.content}
+                style={{
+                  padding: '4px 12px',
+                  fontSize: '13px',
+                  backgroundColor: '#3b82f6',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: cleanupLoading || !formData.content ? 'not-allowed' : 'pointer',
+                  fontWeight: 'bold',
+                  opacity: cleanupLoading || !formData.content ? 0.6 : 1,
+                }}
+              >
+                {cleanupLoading ? 'Cleaning...' : '🧹 Clean-Up'}
               </button>
               <button
                 type="button"

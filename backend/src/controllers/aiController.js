@@ -1,4 +1,4 @@
-const { extractTextFromImage, suggestTopics, searchSnippets, suggestClozeKeywords } = require('../services/aiService');
+const { extractTextFromImage, suggestTopics, searchSnippets, suggestClozeKeywords, cleanupFormatting } = require('../services/aiService');
 const db = require('../db');
 
 const performOCR = async (req, res) => {
@@ -133,9 +133,34 @@ const getClozeSuggestions = async (req, res) => {
   }
 };
 
+const cleanupText = async (req, res) => {
+  try {
+    const { content } = req.body;
+
+    if (!content) {
+      return res.status(400).json({ error: 'Content is required' });
+    }
+
+    const cleanedText = await cleanupFormatting(content);
+
+    res.json({ cleanedText });
+  } catch (error) {
+    console.error('Text cleanup endpoint error:', error);
+
+    if (error.message.includes('API key not configured')) {
+      return res.status(503).json({
+        error: 'AI features are not configured. Please add your OpenAI API key to enable text cleanup.',
+      });
+    }
+
+    res.status(500).json({ error: 'Failed to clean up text' });
+  }
+};
+
 module.exports = {
   performOCR,
   getTopicSuggestions,
   performSearch,
   getClozeSuggestions,
+  cleanupText,
 };
