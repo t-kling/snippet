@@ -4,6 +4,8 @@ import { reviewAPI, snippetAPI } from '../api/client';
 import { renderMixedContent } from '../utils/latex';
 import ImageWithClozes from '../components/ImageWithClozes';
 import Header from '../components/Header';
+import { useSettings } from '../contexts/SettingsContext';
+import { CardContent, PriorityControls, RatingButtons } from '../components/ReviewLayouts';
 
 function Review() {
   const [searchParams] = useSearchParams();
@@ -16,6 +18,7 @@ function Review() {
   const [reviewMode, setReviewMode] = useState('study'); // 'study', 'browse', 'appreciation'
   const [updatingPriority, setUpdatingPriority] = useState(false);
   const navigate = useNavigate();
+  const { reviewLayout } = useSettings();
 
   const topic = searchParams.get('topic');
   const source = searchParams.get('source');
@@ -161,103 +164,103 @@ function Review() {
     return (
       <div>
         <Header />
-        <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 20px 40px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>
-              Review
-              {topic && <span style={{ fontSize: '16px', fontWeight: 'normal', color: 'var(--text-secondary)' }}> • Topic: {topic}</span>}
-              {source && <span style={{ fontSize: '16px', fontWeight: 'normal', color: 'var(--text-secondary)' }}> • Source: {source}</span>}
-            </h2>
-          </div>
-
-          {/* Review Mode Selector */}
+        <div style={{ display: 'flex', gap: '20px', padding: '20px', minHeight: 'calc(100vh - 200px)' }}>
+          {/* Left Sidebar */}
           <div style={{
-            marginBottom: '20px',
-            padding: '20px',
-            backgroundColor: 'var(--bg-primary)',
-            border: '1px solid var(--border-color)',
-            borderRadius: '8px',
+            width: '280px',
+            flexShrink: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
           }}>
-            <div style={{
-              display: 'flex',
-              gap: '10px',
-              marginBottom: '15px',
-              justifyContent: 'center',
-            }}>
-              <button
-                onClick={() => setReviewMode('study')}
-                style={{
-                  flex: 1,
-                  padding: '12px 20px',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                  backgroundColor: reviewMode === 'study' ? 'var(--blue-button)' : 'var(--bg-secondary)',
-                  color: reviewMode === 'study' ? 'white' : 'var(--text-primary)',
-                  border: reviewMode === 'study' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                Study
-              </button>
-              <button
-                onClick={() => {
-                  console.log('Switching to browse mode');
-                  setReviewMode('browse');
-                }}
-                style={{
-                  flex: 1,
-                  padding: '12px 20px',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                  backgroundColor: reviewMode === 'browse' ? 'var(--blue-button)' : 'var(--bg-secondary)',
-                  color: reviewMode === 'browse' ? 'white' : 'var(--text-primary)',
-                  border: reviewMode === 'browse' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                Browse
-              </button>
-              <button
-                onClick={() => {
-                  console.log('Switching to appreciation mode');
-                  setReviewMode('appreciation');
-                }}
-                style={{
-                  flex: 1,
-                  padding: '12px 20px',
-                  fontSize: '15px',
-                  fontWeight: 'bold',
-                  backgroundColor: reviewMode === 'appreciation' ? 'var(--blue-button)' : 'var(--bg-secondary)',
-                  color: reviewMode === 'appreciation' ? 'white' : 'var(--text-primary)',
-                  border: reviewMode === 'appreciation' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
-                  borderRadius: '6px',
-                  cursor: 'pointer',
-                  transition: 'all 0.2s',
-                }}
-              >
-                Appreciation
-              </button>
+            <div>
+              <h2 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '24px' }}>
+                Review
+              </h2>
+              {topic && <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: 'var(--text-secondary)' }}>Topic: {topic}</p>}
+              {source && <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: 'var(--text-secondary)' }}>Source: {source}</p>}
             </div>
-            <p style={{
-              margin: 0,
-              fontSize: '14px',
-              color: 'var(--text-secondary)',
-              textAlign: 'center',
-              lineHeight: '1.5',
+
+            {/* Study Mode Selector */}
+            <div style={{
+              padding: '16px',
+              backgroundColor: 'var(--bg-secondary)',
+              border: '2px solid var(--border-color)',
+              borderRadius: '8px',
             }}>
-              {reviewMode === 'study' && 'Standard spaced repetition. Only shows cards due for review. Cards are scheduled based on your performance.'}
-              {reviewMode === 'browse' && 'Review all learned cards without affecting scheduling. Cards ordered by when they would appear in study mode.'}
-              {reviewMode === 'appreciation' && 'View all learned cards in random order for enjoyment or deeper understanding, without any memorization pressure.'}
-            </p>
+              <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                MODE
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <button
+                  onClick={() => setReviewMode('study')}
+                  style={{
+                    padding: '10px 12px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: reviewMode === 'study' ? 'var(--blue-button)' : 'var(--bg-primary)',
+                    color: reviewMode === 'study' ? 'white' : 'var(--text-primary)',
+                    border: reviewMode === 'study' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Study
+                </button>
+                <button
+                  onClick={() => setReviewMode('browse')}
+                  style={{
+                    padding: '10px 12px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: reviewMode === 'browse' ? 'var(--blue-button)' : 'var(--bg-primary)',
+                    color: reviewMode === 'browse' ? 'white' : 'var(--text-primary)',
+                    border: reviewMode === 'browse' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Browse
+                </button>
+                <button
+                  onClick={() => setReviewMode('appreciation')}
+                  style={{
+                    padding: '10px 12px',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    backgroundColor: reviewMode === 'appreciation' ? 'var(--blue-button)' : 'var(--bg-primary)',
+                    color: reviewMode === 'appreciation' ? 'white' : 'var(--text-primary)',
+                    border: reviewMode === 'appreciation' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  Appreciation
+                </button>
+              </div>
+              <p style={{
+                margin: '12px 0 0 0',
+                fontSize: '12px',
+                color: 'var(--text-secondary)',
+                lineHeight: '1.4',
+              }}>
+                {reviewMode === 'study' && 'Standard spaced repetition. Only cards due for review.'}
+                {reviewMode === 'browse' && 'Review all learned cards without affecting scheduling.'}
+                {reviewMode === 'appreciation' && 'View all learned cards in random order for enjoyment.'}
+              </p>
+            </div>
           </div>
 
-          <div style={{ textAlign: 'center' }}>
+          {/* Main Content Area */}
+          <div style={{ flex: 1, maxWidth: '900px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', textAlign: 'center' }}>
             <h1>All Done!</h1>
-            <p style={{ fontSize: '18px', color: 'var(--dark-text)', margin: '30px 0' }}>
+            <p style={{ fontSize: '18px', color: 'var(--text-primary)', margin: '30px 0' }}>
               {getMessage()}
             </p>
             {reviewMode === 'study' && (
@@ -289,121 +292,183 @@ function Review() {
 
   const currentCard = cards[currentIndex];
 
-  return (
+  // Render different layouts based on setting
+  const renderLayout = () => {
+    const commonProps = {
+      currentCard,
+      currentIndex,
+      cards,
+      showAnswer,
+      setShowAnswer,
+      reviewMode,
+      setReviewMode,
+      handleRate,
+      handleNext,
+      handlePriorityChange,
+      updatingPriority,
+      submitting,
+      navigate,
+      topic,
+      source,
+    };
+
+    switch (reviewLayout) {
+      case 'topbar':
+        return renderTopBarLayout(commonProps);
+      case 'floating':
+        return renderFloatingLayout(commonProps);
+      case 'balanced':
+        return renderBalancedLayout(commonProps);
+      case 'bottom':
+        return renderBottomLayout(commonProps);
+      case 'split':
+        return renderSplitLayout(commonProps);
+      default: // 'sidebar'
+        return renderSidebarLayout(commonProps);
+    }
+  };
+
+  // Sidebar Layout (current)
+  const renderSidebarLayout = (props) => (
     <div>
       <Header />
 
-      <div style={{ maxWidth: '800px', margin: '0 auto', padding: '0 20px 40px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div style={{ display: 'flex', gap: '20px', padding: '20px', minHeight: 'calc(100vh - 200px)' }}>
+        {/* Left Sidebar */}
+        <div style={{
+          width: '280px',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+        }}>
+          {/* Review Info */}
           <div>
-            <h2 style={{ margin: 0, color: 'var(--text-primary)' }}>
+            <h2 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '24px' }}>
               Review
-              {topic && <span style={{ fontSize: '16px', fontWeight: 'normal', color: 'var(--text-secondary)' }}> • Topic: {topic}</span>}
-              {source && <span style={{ fontSize: '16px', fontWeight: 'normal', color: 'var(--text-secondary)' }}> • Source: {source}</span>}
             </h2>
-            <p style={{ margin: '5px 0', color: 'var(--text-secondary)' }}>
+            {topic && <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: 'var(--text-secondary)' }}>Topic: {topic}</p>}
+            {source && <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: 'var(--text-secondary)' }}>Source: {source}</p>}
+            <p style={{ margin: '8px 0 0 0', fontSize: '14px', color: 'var(--text-secondary)' }}>
               Card {currentIndex + 1} of {cards.length}
             </p>
           </div>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', color: 'var(--text-primary)' }}>
-            <input
-              type="checkbox"
-              checked={includeToEdit}
-              onChange={(e) => setIncludeToEdit(e.target.checked)}
-            />
-            Include "to edit" cards
-          </label>
-        </div>
 
-        {/* Review Mode Selector */}
-        <div style={{
-          marginBottom: '20px',
-          padding: '20px',
-          backgroundColor: 'var(--bg-primary)',
-          border: '1px solid var(--border-color)',
-          borderRadius: '8px',
-        }}>
+          {/* Study Mode Selector */}
           <div style={{
-            display: 'flex',
-            gap: '10px',
-            marginBottom: '15px',
-            justifyContent: 'center',
+            padding: '16px',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '2px solid var(--border-color)',
+            borderRadius: '8px',
           }}>
-            <button
-              onClick={() => setReviewMode('study')}
-              style={{
-                flex: 1,
-                padding: '12px 20px',
-                fontSize: '15px',
-                fontWeight: 'bold',
-                backgroundColor: reviewMode === 'study' ? 'var(--blue-button)' : 'var(--bg-secondary)',
-                color: reviewMode === 'study' ? 'white' : 'var(--text-primary)',
-                border: reviewMode === 'study' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Study
-            </button>
-            <button
-              onClick={() => setReviewMode('browse')}
-              style={{
-                flex: 1,
-                padding: '12px 20px',
-                fontSize: '15px',
-                fontWeight: 'bold',
-                backgroundColor: reviewMode === 'browse' ? 'var(--blue-button)' : 'var(--bg-secondary)',
-                color: reviewMode === 'browse' ? 'white' : 'var(--text-primary)',
-                border: reviewMode === 'browse' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Browse
-            </button>
-            <button
-              onClick={() => setReviewMode('appreciation')}
-              style={{
-                flex: 1,
-                padding: '12px 20px',
-                fontSize: '15px',
-                fontWeight: 'bold',
-                backgroundColor: reviewMode === 'appreciation' ? 'var(--blue-button)' : 'var(--bg-secondary)',
-                color: reviewMode === 'appreciation' ? 'white' : 'var(--text-primary)',
-                border: reviewMode === 'appreciation' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-              }}
-            >
-              Appreciation
-            </button>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+              MODE
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                onClick={() => setReviewMode('study')}
+                style={{
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: reviewMode === 'study' ? 'var(--blue-button)' : 'var(--bg-primary)',
+                  color: reviewMode === 'study' ? 'white' : 'var(--text-primary)',
+                  border: reviewMode === 'study' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Study
+              </button>
+              <button
+                onClick={() => setReviewMode('browse')}
+                style={{
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: reviewMode === 'browse' ? 'var(--blue-button)' : 'var(--bg-primary)',
+                  color: reviewMode === 'browse' ? 'white' : 'var(--text-primary)',
+                  border: reviewMode === 'browse' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Browse
+              </button>
+              <button
+                onClick={() => setReviewMode('appreciation')}
+                style={{
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: reviewMode === 'appreciation' ? 'var(--blue-button)' : 'var(--bg-primary)',
+                  color: reviewMode === 'appreciation' ? 'white' : 'var(--text-primary)',
+                  border: reviewMode === 'appreciation' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                }}
+              >
+                Appreciation
+              </button>
+            </div>
+            <p style={{
+              margin: '12px 0 0 0',
+              fontSize: '12px',
+              color: 'var(--text-secondary)',
+              lineHeight: '1.4',
+            }}>
+              {reviewMode === 'study' && 'Standard spaced repetition. Only cards due for review.'}
+              {reviewMode === 'browse' && 'Review all learned cards without affecting scheduling.'}
+              {reviewMode === 'appreciation' && 'View all learned cards in random order for enjoyment.'}
+            </p>
           </div>
-          <p style={{
-            margin: 0,
-            fontSize: '14px',
-            color: 'var(--text-secondary)',
-            textAlign: 'center',
-            lineHeight: '1.5',
-          }}>
-            {reviewMode === 'study' && 'Standard spaced repetition. Only shows cards due for review. Cards are scheduled based on your performance.'}
-            {reviewMode === 'browse' && 'Review all learned cards without affecting scheduling. Cards ordered by when they would appear in study mode.'}
-            {reviewMode === 'appreciation' && 'View all learned cards in random order for enjoyment or deeper understanding, without any memorization pressure.'}
-          </p>
+
+          {/* Edit Card Button */}
+          <button
+            onClick={() => navigate(`/snippet/${currentCard.id}/edit`)}
+            style={{
+              padding: '12px',
+              fontSize: '14px',
+              fontWeight: 'bold',
+              backgroundColor: 'var(--bg-secondary)',
+              color: 'var(--text-primary)',
+              border: '2px solid var(--border-color)',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.backgroundColor = 'var(--card-hover)';
+              e.target.style.borderColor = 'var(--text-primary)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.backgroundColor = 'var(--bg-secondary)';
+              e.target.style.borderColor = 'var(--border-color)';
+            }}
+          >
+            ✏️ Edit This Card
+          </button>
         </div>
 
-      <div style={{
-        backgroundColor: 'var(--bg-secondary)',
-        border: '2px solid var(--border-color)',
-        borderRadius: '12px',
-        padding: '40px',
-        minHeight: '400px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-      }}>
+        {/* Main Card Area */}
+        <div style={{ flex: 1, maxWidth: '900px' }}>
+
+        <div style={{
+          backgroundColor: 'var(--bg-secondary)',
+          border: '2px solid var(--border-color)',
+          borderRadius: '12px',
+          padding: '40px',
+          minHeight: '500px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+        }}>
         <div style={{ marginBottom: '30px' }}>
           <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>{currentCard.title}</h3>
 
@@ -717,11 +782,8 @@ function Review() {
             Next
           </button>
         )}
-      </div>
-
-      <div style={{ marginTop: '20px', textAlign: 'center', color: 'var(--text-secondary)', fontSize: '14px' }}>
-        <p>Tip: Focus on understanding, not just memorizing. Mark cards as "to edit" if you want to revise them later.</p>
-      </div>
+        </div>
+        </div>
       </div>
     </div>
   );

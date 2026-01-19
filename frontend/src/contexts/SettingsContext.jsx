@@ -32,6 +32,10 @@ export function SettingsProvider({ children }) {
     return saved === null ? true : saved === 'true';
   });
 
+  const [reviewLayout, setReviewLayout] = useState(() => {
+    return localStorage.getItem('reviewLayout') || 'sidebar';
+  });
+
   useEffect(() => {
     // Apply theme to document
     document.documentElement.setAttribute('data-theme', theme);
@@ -48,6 +52,10 @@ export function SettingsProvider({ children }) {
     localStorage.setItem('showWhyMadeThis', showWhyMadeThis);
   }, [showWhyMadeThis]);
 
+  useEffect(() => {
+    localStorage.setItem('reviewLayout', reviewLayout);
+  }, [reviewLayout]);
+
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
@@ -62,13 +70,19 @@ export function SettingsProvider({ children }) {
     setShowWhyMadeThis(prev => !prev);
   };
 
+  const changeReviewLayout = (newLayout) => {
+    setReviewLayout(newLayout);
+  };
+
   const value = {
     theme,
     font,
     showWhyMadeThis,
+    reviewLayout,
     toggleTheme,
     changeFont,
     toggleShowWhyMadeThis,
+    changeReviewLayout,
   };
 
   return (

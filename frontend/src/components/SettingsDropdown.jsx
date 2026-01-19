@@ -11,7 +11,7 @@ function SettingsDropdown() {
   const [clearing, setClearing] = useState(false);
   const dropdownRef = useRef(null);
   const fileInputRef = useRef(null);
-  const { theme, font, showWhyMadeThis, toggleTheme, changeFont, toggleShowWhyMadeThis } = useSettings();
+  const { theme, font, showWhyMadeThis, reviewLayout, toggleTheme, changeFont, toggleShowWhyMadeThis, changeReviewLayout } = useSettings();
   const navigate = useNavigate();
 
   // Close dropdown when clicking outside
@@ -151,9 +151,13 @@ function SettingsDropdown() {
       const response = await snippetAPI.importLibrary(data);
       console.log('Import response:', response.data);
 
-      let message = `Imported ${response.data.importedCount} of ${response.data.totalAttempted} snippets successfully!`;
+      let message = `Import complete!\n\nTotal: ${response.data.totalAttempted}`;
+      message += `\nImported: ${response.data.importedCount - response.data.mergedCount}`;
+      if (response.data.mergedCount > 0) {
+        message += `\nMerged duplicates: ${response.data.mergedCount}`;
+      }
       if (response.data.failedCount > 0) {
-        message += `\n\nFailed: ${response.data.failedCount}`;
+        message += `\nFailed: ${response.data.failedCount}`;
         if (response.data.errors && response.data.errors.length > 0) {
           message += `\n\nErrors:\n${response.data.errors.join('\n')}`;
         }
@@ -319,6 +323,34 @@ function SettingsDropdown() {
                   Show "Why I Made This" field
                 </span>
               </label>
+            </div>
+
+            {/* Review Layout */}
+            <div style={{ padding: '8px 16px', borderBottom: '1px solid var(--border-color)' }}>
+              <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                REVIEW LAYOUT
+              </div>
+              <select
+                value={reviewLayout}
+                onChange={(e) => changeReviewLayout(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '8px 12px',
+                  fontSize: '14px',
+                  backgroundColor: 'var(--input-bg)',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                }}
+              >
+                <option value="sidebar">Sidebar (Current)</option>
+                <option value="topbar">Centered with Top Bar</option>
+                <option value="floating">Full Width with Floating Controls</option>
+                <option value="balanced">Balanced Sidebar</option>
+                <option value="bottom">Bottom Controls Bar</option>
+                <option value="split">Split View with Metadata</option>
+              </select>
             </div>
 
             {/* Stats Link */}

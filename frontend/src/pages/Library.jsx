@@ -23,6 +23,7 @@ function Library() {
   const [isSearching, setIsSearching] = useState(false);
   const [isSearchMode, setIsSearchMode] = useState(false);
   const [useSemanticSearch, setUseSemanticSearch] = useState(false);
+  const [viewMode, setViewMode] = useState('cards'); // 'cards' or 'table'
 
   useEffect(() => {
     loadTopics();
@@ -201,20 +202,218 @@ function Library() {
     <div>
       <Header />
 
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '0 20px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <h1 style={{ margin: 0, color: 'var(--text-primary)' }}>Snippet Library</h1>
+      <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
+        {/* Left Sidebar */}
+        <div style={{
+          width: '280px',
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+        }}>
+          <div>
+            <h2 style={{ margin: '0 0 8px 0', color: 'var(--text-primary)', fontSize: '24px' }}>
+              Library
+            </h2>
+            <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)' }}>
+              {snippets.length} snippet{snippets.length === 1 ? '' : 's'}
+            </p>
+          </div>
+
+          {/* View Mode Toggle */}
+          <div style={{
+            padding: '16px',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '2px solid var(--border-color)',
+            borderRadius: '8px',
+          }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+              VIEW
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <button
+                onClick={() => setViewMode('cards')}
+                style={{
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: viewMode === 'cards' ? 'var(--blue-button)' : 'var(--bg-primary)',
+                  color: viewMode === 'cards' ? 'white' : 'var(--text-primary)',
+                  border: viewMode === 'cards' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                }}
+              >
+                📋 Cards
+              </button>
+              <button
+                onClick={() => setViewMode('table')}
+                style={{
+                  padding: '10px 12px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: viewMode === 'table' ? 'var(--blue-button)' : 'var(--bg-primary)',
+                  color: viewMode === 'table' ? 'white' : 'var(--text-primary)',
+                  border: viewMode === 'table' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'all 0.2s',
+                }}
+              >
+                📊 Table
+              </button>
+            </div>
+          </div>
+
+          {/* Sort & Filter */}
+          <div style={{
+            padding: '16px',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '2px solid var(--border-color)',
+            borderRadius: '8px',
+          }}>
+            <h3 style={{ margin: '0 0 12px 0', fontSize: '14px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+              SORT & FILTER
+            </h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                  Sort By
+                </label>
+                <select
+                  value={filters.sortBy}
+                  onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    fontSize: '14px',
+                    border: '2px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-primary)',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <option value="created_at">Date Created</option>
+                  <option value="updated_at">Date Modified</option>
+                  <option value="title">Title</option>
+                  <option value="priority">Priority</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                  Order
+                </label>
+                <select
+                  value={filters.order}
+                  onChange={(e) => setFilters({ ...filters, order: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    fontSize: '14px',
+                    border: '2px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-primary)',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <option value="desc">Newest First</option>
+                  <option value="asc">Oldest First</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                  Queue Status
+                </label>
+                <select
+                  value={filters.inQueue}
+                  onChange={(e) => setFilters({ ...filters, inQueue: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    fontSize: '14px',
+                    border: '2px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-primary)',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <option value="">All</option>
+                  <option value="true">In Queue</option>
+                  <option value="false">Not in Queue</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                  Edit Status
+                </label>
+                <select
+                  value={filters.toEdit}
+                  onChange={(e) => setFilters({ ...filters, toEdit: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    fontSize: '14px',
+                    border: '2px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-primary)',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <option value="">All</option>
+                  <option value="true">To Edit</option>
+                  <option value="false">Complete</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '6px', fontSize: '12px', fontWeight: 'bold', color: 'var(--text-secondary)' }}>
+                  Topic
+                </label>
+                <select
+                  value={filters.topic}
+                  onChange={(e) => setFilters({ ...filters, topic: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    fontSize: '14px',
+                    border: '2px solid var(--border-color)',
+                    backgroundColor: 'var(--bg-primary)',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <option value="">All Topics</option>
+                  {topics.map(topic => (
+                    <option key={topic.id} value={topic.name}>{topic.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          </div>
+
           {snippets.length > 0 && (
-            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-              <input
-                type="checkbox"
-                checked={selectedSnippets.length === snippets.length && snippets.length > 0}
-                onChange={toggleSelectAll}
-              />
-              <span style={{ fontSize: '14px', color: 'var(--text-primary)' }}>Select All</span>
-            </label>
+            <button
+              onClick={toggleSelectAll}
+              style={{
+                padding: '10px 12px',
+                fontSize: '14px',
+                fontWeight: 'bold',
+                backgroundColor: 'var(--bg-secondary)',
+                color: 'var(--text-primary)',
+                border: '2px solid var(--border-color)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              {selectedSnippets.length === snippets.length ? '✓ Deselect All' : 'Select All'}
+            </button>
           )}
         </div>
+
+        {/* Main Content Area */}
+        <div style={{ flex: 1 }}>
 
         {/* Search */}
         <div style={{
@@ -573,119 +772,7 @@ function Library() {
           </div>
         )}
 
-      <div style={{
-        padding: '20px',
-        backgroundColor: 'var(--bg-secondary)',
-        border: '2px solid var(--border-color)',
-        borderRadius: '8px',
-        marginBottom: '30px',
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-        gap: '15px',
-      }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>Sort By</label>
-          <select
-            value={filters.sortBy}
-            onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              fontSize: '14px',
-              border: '2px solid var(--border-color)',
-              backgroundColor: '#FFF',
-              borderRadius: '4px',
-            }}
-          >
-            <option value="created_at">Date Created</option>
-            <option value="updated_at">Date Modified</option>
-            <option value="title">Title</option>
-            <option value="priority">Priority</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>Order</label>
-          <select
-            value={filters.order}
-            onChange={(e) => setFilters({ ...filters, order: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              fontSize: '14px',
-              border: '2px solid var(--border-color)',
-              backgroundColor: '#FFF',
-              borderRadius: '4px',
-            }}
-          >
-            <option value="desc">Descending</option>
-            <option value="asc">Ascending</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>In Queue</label>
-          <select
-            value={filters.inQueue}
-            onChange={(e) => setFilters({ ...filters, inQueue: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              fontSize: '14px',
-              border: '2px solid var(--border-color)',
-              backgroundColor: '#FFF',
-              borderRadius: '4px',
-            }}
-          >
-            <option value="">All</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>To Edit</label>
-          <select
-            value={filters.toEdit}
-            onChange={(e) => setFilters({ ...filters, toEdit: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              fontSize: '14px',
-              border: '2px solid var(--border-color)',
-              backgroundColor: '#FFF',
-              borderRadius: '4px',
-            }}
-          >
-            <option value="">All</option>
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-          </select>
-        </div>
-
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontSize: '14px', fontWeight: 'bold' }}>Topic</label>
-          <select
-            value={filters.topic}
-            onChange={(e) => setFilters({ ...filters, topic: e.target.value })}
-            style={{
-              width: '100%',
-              padding: '8px',
-              fontSize: '14px',
-              border: '2px solid var(--border-color)',
-              backgroundColor: '#FFF',
-              borderRadius: '4px',
-            }}
-          >
-            <option value="">All Topics</option>
-            {topics.map(topic => (
-              <option key={topic.id} value={topic.name}>{topic.name}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {loading ? (
+        {loading ? (
         <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Loading...</div>
       ) : snippets.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-primary)' }}>
@@ -707,7 +794,176 @@ function Library() {
             Create Your First Snippet
           </Link>
         </div>
+      ) : viewMode === 'table' ? (
+        /* Table View */
+        <div style={{
+          backgroundColor: 'var(--bg-secondary)',
+          border: '2px solid var(--border-color)',
+          borderRadius: '8px',
+          overflow: 'auto',
+        }}>
+          <table style={{
+            width: '100%',
+            borderCollapse: 'collapse',
+            fontSize: '14px',
+          }}>
+            <thead>
+              <tr style={{ backgroundColor: 'var(--bg-primary)', borderBottom: '2px solid var(--border-color)' }}>
+                <th style={{ padding: '12px 8px', textAlign: 'left', width: '40px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectedSnippets.length === snippets.length && snippets.length > 0}
+                    onChange={toggleSelectAll}
+                    style={{ cursor: 'pointer' }}
+                  />
+                </th>
+                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 'bold', color: 'var(--text-secondary)' }}>Title</th>
+                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 'bold', color: 'var(--text-secondary)', width: '100px' }}>Type</th>
+                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 'bold', color: 'var(--text-secondary)', width: '120px' }}>Priority</th>
+                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 'bold', color: 'var(--text-secondary)', width: '100px' }}>Status</th>
+                <th style={{ padding: '12px 8px', textAlign: 'left', fontWeight: 'bold', color: 'var(--text-secondary)', width: '200px' }}>Topics</th>
+                <th style={{ padding: '12px 8px', textAlign: 'center', fontWeight: 'bold', color: 'var(--text-secondary)', width: '120px' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {snippets.map((snippet) => (
+                <tr
+                  key={snippet.id}
+                  style={{
+                    borderBottom: '1px solid var(--border-color)',
+                    backgroundColor: selectedSnippets.includes(snippet.id) ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                  }}
+                >
+                  <td style={{ padding: '12px 8px' }}>
+                    <input
+                      type="checkbox"
+                      checked={selectedSnippets.includes(snippet.id)}
+                      onChange={() => toggleSelectSnippet(snippet.id)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                  </td>
+                  <td style={{ padding: '12px 8px', color: 'var(--text-primary)', fontWeight: '500' }}>
+                    {snippet.title}
+                  </td>
+                  <td style={{ padding: '12px 8px' }}>
+                    <span style={{
+                      padding: '3px 8px',
+                      backgroundColor: '#e5e7eb',
+                      color: 'var(--text-secondary)',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                    }}>
+                      {snippet.type}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 8px' }}>
+                    <span style={{
+                      padding: '3px 8px',
+                      backgroundColor: snippet.priority === 'high' ? '#dc2626' : snippet.priority === 'low' ? '#64748b' : '#f59e0b',
+                      color: 'white',
+                      borderRadius: '10px',
+                      fontSize: '12px',
+                      textTransform: 'capitalize',
+                    }}>
+                      {snippet.priority || 'medium'}
+                    </span>
+                  </td>
+                  <td style={{ padding: '12px 8px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      {snippet.in_queue && (
+                        <span style={{
+                          padding: '2px 6px',
+                          backgroundColor: 'var(--blue-button)',
+                          color: 'white',
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          textAlign: 'center',
+                        }}>
+                          Queue
+                        </span>
+                      )}
+                      {snippet.to_edit && (
+                        <span style={{
+                          padding: '2px 6px',
+                          backgroundColor: 'var(--hard-orange)',
+                          color: 'white',
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          textAlign: 'center',
+                        }}>
+                          To Edit
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={{ padding: '12px 8px' }}>
+                    {snippet.topics && snippet.topics.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                        {snippet.topics.slice(0, 2).map((topic) => (
+                          <span
+                            key={topic.id}
+                            style={{
+                              padding: '2px 6px',
+                              backgroundColor: '#e5e7eb',
+                              color: 'var(--text-primary)',
+                              borderRadius: '8px',
+                              fontSize: '11px',
+                            }}
+                          >
+                            {topic.name}
+                          </span>
+                        ))}
+                        {snippet.topics.length > 2 && (
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                            +{snippet.topics.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>—</span>
+                    )}
+                  </td>
+                  <td style={{ padding: '12px 8px' }}>
+                    <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                      <Link
+                        to={`/snippet/${snippet.id}/edit`}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          backgroundColor: 'var(--text-primary)',
+                          color: 'white',
+                          border: 'none',
+                          textDecoration: 'none',
+                          borderRadius: '4px',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(snippet.id)}
+                        style={{
+                          padding: '4px 8px',
+                          fontSize: '12px',
+                          backgroundColor: 'var(--again-red)',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontWeight: 'bold',
+                        }}
+                      >
+                        Del
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       ) : (
+        /* Card View */
         <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {snippets.map((snippet) => (
             <div
@@ -753,7 +1009,7 @@ function Library() {
                         In Queue
                       </span>
                     )}
-                    {snippet.needs_work && (
+                    {snippet.to_edit && (
                       <span style={{
                         padding: '2px 8px',
                         backgroundColor: 'var(--hard-orange)',
@@ -866,6 +1122,7 @@ function Library() {
           ))}
         </div>
       )}
+        </div>
       </div>
     </div>
   );

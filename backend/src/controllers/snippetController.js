@@ -477,8 +477,16 @@ const importLibrary = async (req, res) => {
 
     let importedCount = 0;
     let failedCount = 0;
+    let mergedCount = 0;
     const errors = [];
     const topicMap = new Map(); // Map topic names to IDs
+
+    // First, get all existing snippets for duplicate detection
+    const existingSnippetsResult = await db.query(
+      'SELECT * FROM snippets WHERE user_id = $1',
+      [req.userId]
+    );
+    const existingSnippets = existingSnippetsResult.rows;
 
     // First, create all topics
     if (topics && Array.isArray(topics)) {
@@ -502,6 +510,27 @@ const importLibrary = async (req, res) => {
       }
     }
 
+    // Helper function to check if two snippets are duplicates
+    const isDuplicate = (existing, incoming) => {
+      // Must match on content/image and type
+      const contentMatch = (existing.content || '') === (incoming.content || '');
+      const imageMatch = (existing.image_data || '') === (incoming.image_data || '');
+      const typeMatch = existing.type === incoming.type;
+
+      // Must have same content/image (at least one must match if both present)
+      if (!contentMatch && !imageMatch) return false;
+      if (!typeMatch) return false;
+
+      // Additional metadata checks (optional but increases confidence)
+      const sourceMatch = (existing.source || '') === (incoming.source || '');
+      const authorMatch = (existing.author || '') === (incoming.author || '');
+      const urlMatch = (existing.url || '') === (incoming.url || '');
+
+      // If content matches and at least 2 out of 3 metadata fields match, it's a duplicate
+      const metadataMatches = [sourceMatch, authorMatch, urlMatch].filter(Boolean).length;
+      return metadataMatches >= 2 || (contentMatch && imageMatch);
+    };
+
     // Import each snippet
     for (let i = 0; i < snippets.length; i++) {
       const snippet = snippets[i];
@@ -513,6 +542,9 @@ const importLibrary = async (req, res) => {
           throw new Error('Missing required field: type');
         }
 
+        // Check for duplicates
+        const duplicate = existingSnippets.find(existing => isDuplicate(existing, snippet));
+
         // Properly handle JSON fields that might be objects or strings
         const normalizeClozeData = (data) => {
           if (!data) return '[]';
@@ -520,44 +552,106 @@ const importLibrary = async (req, res) => {
           return JSON.stringify(data);
         };
 
-        // Create snippet
-        const snippetResult = await db.query(
-          `INSERT INTO snippets (user_id, title, type, source, content, cloze_data, in_queue, to_edit, image_data, image_clozes, author, url, page, timestamp, why_made_this, parent_snippet, priority)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-           RETURNING *`,
-          [
-            req.userId,
-            snippet.title || 'Untitled',
-            snippet.type,
-            snippet.source || null,
-            snippet.content || '',
-            normalizeClozeData(snippet.cloze_data),
-            snippet.in_queue !== false,
-            snippet.to_edit || false,
-            snippet.image_data || null,
-            normalizeClozeData(snippet.image_clozes),
-            snippet.author || null,
-            snippet.url || null,
-            snippet.page || null,
-            snippet.timestamp || null,
-            snippet.why_made_this || null,
-            snippet.parent_snippet || null,
-            snippet.priority || 'medium',
-          ]
-        );
+        let snippetId;
+        let newSnippet;
 
-        const newSnippet = snippetResult.rows[0];
+        if (duplicate) {
+          // Merge with existing snippet (update it with new data, keeping existing ID)
+          console.log(`Found duplicate, merging with existing snippet ID ${duplicate.id}`);
 
-        // Create review entry if in queue
-        if (newSnippet.in_queue) {
-          await db.query(
-            `INSERT INTO reviews (snippet_id, user_id) VALUES ($1, $2)`,
-            [newSnippet.id, req.userId]
+          const snippetResult = await db.query(
+            `UPDATE snippets
+             SET title = $1, type = $2, source = $3, content = $4, cloze_data = $5,
+                 in_queue = $6, to_edit = $7, image_data = $8, image_clozes = $9,
+                 author = $10, url = $11, page = $12, timestamp = $13,
+                 why_made_this = $14, parent_snippet = $15, priority = $16
+             WHERE id = $17 AND user_id = $18
+             RETURNING *`,
+            [
+              snippet.title || duplicate.title || 'Untitled',
+              snippet.type,
+              snippet.source || duplicate.source || null,
+              snippet.content || duplicate.content || '',
+              normalizeClozeData(snippet.cloze_data) || duplicate.cloze_data,
+              snippet.in_queue !== undefined ? snippet.in_queue : duplicate.in_queue,
+              snippet.to_edit !== undefined ? snippet.to_edit : duplicate.to_edit,
+              snippet.image_data || duplicate.image_data || null,
+              normalizeClozeData(snippet.image_clozes) || duplicate.image_clozes,
+              snippet.author || duplicate.author || null,
+              snippet.url || duplicate.url || null,
+              snippet.page || duplicate.page || null,
+              snippet.timestamp || duplicate.timestamp || null,
+              snippet.why_made_this || duplicate.why_made_this || null,
+              snippet.parent_snippet || duplicate.parent_snippet || null,
+              snippet.priority || duplicate.priority || 'medium',
+              duplicate.id,
+              req.userId,
+            ]
           );
+
+          newSnippet = snippetResult.rows[0];
+          snippetId = duplicate.id;
+          mergedCount++;
+
+          // Update review entry if needed
+          if (newSnippet.in_queue && !duplicate.in_queue) {
+            await db.query(
+              `INSERT INTO reviews (snippet_id, user_id) VALUES ($1, $2)
+               ON CONFLICT (snippet_id) DO NOTHING`,
+              [snippetId, req.userId]
+            );
+          } else if (!newSnippet.in_queue && duplicate.in_queue) {
+            await db.query(
+              'DELETE FROM reviews WHERE snippet_id = $1',
+              [snippetId]
+            );
+          }
+        } else {
+          // Create new snippet
+          const snippetResult = await db.query(
+            `INSERT INTO snippets (user_id, title, type, source, content, cloze_data, in_queue, to_edit, image_data, image_clozes, author, url, page, timestamp, why_made_this, parent_snippet, priority)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+             RETURNING *`,
+            [
+              req.userId,
+              snippet.title || 'Untitled',
+              snippet.type,
+              snippet.source || null,
+              snippet.content || '',
+              normalizeClozeData(snippet.cloze_data),
+              snippet.in_queue !== false,
+              snippet.to_edit || false,
+              snippet.image_data || null,
+              normalizeClozeData(snippet.image_clozes),
+              snippet.author || null,
+              snippet.url || null,
+              snippet.page || null,
+              snippet.timestamp || null,
+              snippet.why_made_this || null,
+              snippet.parent_snippet || null,
+              snippet.priority || 'medium',
+            ]
+          );
+
+          newSnippet = snippetResult.rows[0];
+          snippetId = newSnippet.id;
+
+          // Create review entry if in queue
+          if (newSnippet.in_queue) {
+            await db.query(
+              `INSERT INTO reviews (snippet_id, user_id) VALUES ($1, $2)`,
+              [snippetId, req.userId]
+            );
+          }
         }
 
-        // Link topics
+        // Link topics (clear existing ones if merging, then add all)
         if (snippet.topics && Array.isArray(snippet.topics)) {
+          // If merging, don't clear topics - just add new ones
+          if (!duplicate) {
+            // Only for new snippets, clear is not needed
+          }
+
           for (const topic of snippet.topics) {
             const topicName = typeof topic === 'string' ? topic : topic.name;
             let topicId = topicMap.get(topicName);
@@ -583,13 +677,13 @@ const importLibrary = async (req, res) => {
 
             await db.query(
               'INSERT INTO snippet_topics (snippet_id, topic_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
-              [newSnippet.id, topicId]
+              [snippetId, topicId]
             );
           }
         }
 
         importedCount++;
-        console.log(`Successfully imported snippet ${i + 1}`);
+        console.log(`Successfully ${duplicate ? 'merged' : 'imported'} snippet ${i + 1}`);
       } catch (snippetError) {
         failedCount++;
         const errorMsg = `Snippet ${i + 1} (${snippet.title || 'Untitled'}): ${snippetError.message}`;
@@ -600,11 +694,12 @@ const importLibrary = async (req, res) => {
     }
 
     console.log('=== IMPORT LIBRARY COMPLETE ===');
-    console.log(`Imported: ${importedCount}, Failed: ${failedCount}`);
+    console.log(`Imported: ${importedCount}, Merged: ${mergedCount}, Failed: ${failedCount}`);
 
     res.json({
       message: 'Library imported successfully',
       importedCount,
+      mergedCount,
       totalAttempted: snippets.length,
       failedCount,
       errors: errors.slice(0, 10) // Only return first 10 errors
