@@ -101,3 +101,10 @@ Add new migrations as SQL files in `backend/src/db/migrations/`.
 ## Code Quality Reminders
 
 **Always verify closing braces**: When editing large functions or components with nested JSX, double-check that all opening braces `{` and parentheses `(` have matching closing braces `}` and `)`. Arrow functions should end with `};` syntax errors can occur if the function body isn't properly closed.
+
+**Extract duplicated code**: When the same logic or constants appear in multiple places (especially 3+ times), extract them to shared helpers, constants, or components. Examples:
+- Functions/constants defined identically in multiple places should be hoisted to module level
+- Inline JSX duplicated across components should be extracted to shared components
+- This reduces bugs, improves maintainability, and makes code easier to understand
+
+**Use existing shared components**: Before writing new JSX, check if shared components already exist that provide the same functionality. Review imports and component files to avoid reinventing the wheel.
