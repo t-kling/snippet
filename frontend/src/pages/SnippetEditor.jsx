@@ -47,7 +47,7 @@ function SnippetEditor() {
   const [topicSuggestionLoading, setTopicSuggestionLoading] = useState(false);
   const [clozeSuggestionLoading, setClozeSuggestionLoading] = useState(false);
   const [cleanupLoading, setCleanupLoading] = useState(false);
-  const [sourceInfoExpanded, setSourceInfoExpanded] = useState(true);
+  const [sourceInfoExpanded, setSourceInfoExpanded] = useState(false);
 
   useEffect(() => {
     loadTopics();
@@ -517,9 +517,68 @@ function SnippetEditor() {
           </select>
         </div>
 
-        {/* Source Metadata Section */}
+        {/* Source Title - always visible */}
+        <div>
+          <label htmlFor="source" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+            Source Title {formData.type === 'excerpt' && <span style={{ color: 'var(--again-red)' }}>*</span>}
+          </label>
+          <div style={{ position: 'relative' }}>
+            <input
+              id="source"
+              type="text"
+              value={formData.source}
+              onChange={(e) => setFormData({ ...formData, source: e.target.value })}
+              placeholder="Book, article, or media title"
+              required={formData.type === 'excerpt'}
+              style={{
+                width: '100%',
+                padding: '8px',
+                fontSize: '14px',
+                border: '2px solid var(--border-color)',
+                backgroundColor: '#FFF',
+                borderRadius: '4px',
+              }}
+            />
+            {sourceSuggestions.length > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'var(--bg-secondary)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '4px',
+                marginTop: '2px',
+                zIndex: 10,
+                maxHeight: '200px',
+                overflowY: 'auto',
+              }}>
+                {sourceSuggestions.map((source, index) => (
+                  <div
+                    key={index}
+                    onClick={() => {
+                      setFormData({ ...formData, source });
+                      setSourceSuggestions([]);
+                    }}
+                    style={{
+                      padding: '8px',
+                      cursor: 'pointer',
+                      borderBottom: index < sourceSuggestions.length - 1 ? '1px solid var(--border-color)' : 'none',
+                    }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#f9fafb'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--bg-secondary)'}
+                  >
+                    {source}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Additional Source Metadata - collapsible */}
         <div style={{
-          padding: '20px',
+          padding: '15px',
           backgroundColor: 'var(--bg-primary)',
           border: '1px solid var(--border-color)',
           borderRadius: '6px',
@@ -539,102 +598,20 @@ function SnippetEditor() {
               transition: 'transform 0.2s',
               transform: sourceInfoExpanded ? 'rotate(90deg)' : 'rotate(0deg)',
               display: 'inline-block',
+              fontSize: '12px',
             }}>
               ▶
             </span>
-            <h3 style={{ margin: 0, fontSize: '16px', color: 'var(--text-primary)' }}>Source Information</h3>
+            <h3 style={{ margin: 0, fontSize: '14px', color: 'var(--text-secondary)', fontWeight: '500' }}>
+              Additional Metadata (optional)
+            </h3>
           </div>
 
           {sourceInfoExpanded && (
             <>
               <div style={{ marginBottom: '15px' }}>
-                <label htmlFor="source" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Source Title {formData.type === 'excerpt' && <span style={{ color: 'var(--again-red)' }}>*</span>}
-                </label>
-            <div style={{ position: 'relative' }}>
-              <input
-                id="source"
-                type="text"
-                value={formData.source}
-                onChange={(e) => setFormData({ ...formData, source: e.target.value })}
-                placeholder="Book, article, or media title"
-                required={formData.type === 'excerpt'}
-                style={{
-                  width: '100%',
-                  padding: '8px',
-                  fontSize: '14px',
-                  border: '2px solid var(--border-color)',
-                  backgroundColor: '#FFF',
-                  borderRadius: '4px',
-                }}
-              />
-              {sourceSuggestions.length > 0 && (
-                <div style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: 0,
-                  right: 0,
-                  backgroundColor: 'var(--bg-secondary)',
-                  border: '1px solid var(--border-color)',
-                  borderRadius: '4px',
-                  marginTop: '2px',
-                  zIndex: 10,
-                  maxHeight: '200px',
-                  overflowY: 'auto',
-                }}>
-                  {sourceSuggestions.map((source, index) => (
-                    <div
-                      key={index}
-                      onClick={() => {
-                        setFormData({ ...formData, source });
-                        setSourceSuggestions([]);
-                      }}
-                      style={{
-                        padding: '8px',
-                        cursor: 'pointer',
-                        borderBottom: index < sourceSuggestions.length - 1 ? '1px solid var(--border-color)' : 'none',
-                      }}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f9fafb'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'var(--bg-secondary)'}
-                    >
-                      {source}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '15px' }}>
-            <label htmlFor="parentSnippet" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-              Parent Snippet (optional)
-            </label>
-            <input
-              id="parentSnippet"
-              type="text"
-              value={formData.parentSnippet}
-              onChange={(e) => setFormData({ ...formData, parentSnippet: e.target.value })}
-              placeholder="Title of original card if this is a copy"
-              style={{
-                width: '100%',
-                padding: '8px',
-                fontSize: '14px',
-                border: '2px solid var(--border-color)',
-                backgroundColor: '#FFF',
-                borderRadius: '4px',
-              }}
-            />
-            <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
-              Automatically filled when using "Make Copy Snippet"
-            </small>
-          </div>
-
-          {/* Optional metadata fields - appear when source title is filled */}
-          {formData.source && (
-            <>
-              <div style={{ marginBottom: '15px' }}>
                 <label htmlFor="author" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  Author (optional)
+                  Author
                 </label>
                 <input
                   id="author"
@@ -655,7 +632,7 @@ function SnippetEditor() {
 
               <div style={{ marginBottom: '15px' }}>
                 <label htmlFor="url" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                  URL (optional)
+                  URL
                 </label>
                 <input
                   id="url"
@@ -674,10 +651,10 @@ function SnippetEditor() {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
                 <div>
                   <label htmlFor="page" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                    Page (optional)
+                    Page
                   </label>
                   <input
                     id="page"
@@ -698,7 +675,7 @@ function SnippetEditor() {
 
                 <div>
                   <label htmlFor="timestamp" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-                    Timestamp (optional)
+                    Timestamp
                   </label>
                   <input
                     id="timestamp"
@@ -717,35 +694,57 @@ function SnippetEditor() {
                   />
                 </div>
               </div>
-            </>
-          )}
+
+              <div>
+                <label htmlFor="parentSnippet" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+                  Parent Snippet
+                </label>
+                <input
+                  id="parentSnippet"
+                  type="text"
+                  value={formData.parentSnippet}
+                  onChange={(e) => setFormData({ ...formData, parentSnippet: e.target.value })}
+                  placeholder="Title of original card if this is a copy"
+                  style={{
+                    width: '100%',
+                    padding: '8px',
+                    fontSize: '14px',
+                    border: '2px solid var(--border-color)',
+                    backgroundColor: '#FFF',
+                    borderRadius: '4px',
+                  }}
+                />
+                <small style={{ color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+                  Automatically filled when using "Make Copy Snippet"
+                </small>
+              </div>
             </>
           )}
         </div>
 
         <div>
-          <label htmlFor="content" style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-            Content {formData.imageData && <span style={{ color: 'var(--text-secondary)', fontWeight: 'normal' }}>(optional with image)</span>}
+          <label htmlFor="content" style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', fontSize: '16px' }}>
+            Content {formData.imageData && <span style={{ color: 'var(--text-secondary)', fontWeight: 'normal', fontSize: '14px' }}>(optional with image)</span>}
           </label>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
-            <small style={{ color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+            <small style={{ color: 'var(--text-secondary)', fontSize: '12px' }}>
               Ctrl+Shift+C: cloze | Ctrl+Shift+H: highlight | Ctrl+Shift+M: math
             </small>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: '6px' }}>
               <button
                 type="button"
                 onClick={handleSuggestCloze}
                 disabled={clozeSuggestionLoading || !formData.content}
                 style={{
-                  padding: '4px 12px',
-                  fontSize: '13px',
-                  backgroundColor: '#8b5cf6',
-                  color: '#ffffff',
-                  border: 'none',
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
                   cursor: clozeSuggestionLoading || !formData.content ? 'not-allowed' : 'pointer',
-                  fontWeight: 'bold',
-                  opacity: clozeSuggestionLoading || !formData.content ? 0.6 : 1,
+                  fontWeight: '500',
+                  opacity: clozeSuggestionLoading || !formData.content ? 0.5 : 1,
                 }}
               >
                 {clozeSuggestionLoading ? 'Suggesting...' : '✨ Auto-Cloze'}
@@ -755,15 +754,15 @@ function SnippetEditor() {
                 onClick={handleCleanupText}
                 disabled={cleanupLoading || !formData.content}
                 style={{
-                  padding: '4px 12px',
-                  fontSize: '13px',
-                  backgroundColor: '#3b82f6',
-                  color: '#ffffff',
-                  border: 'none',
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
                   cursor: cleanupLoading || !formData.content ? 'not-allowed' : 'pointer',
-                  fontWeight: 'bold',
-                  opacity: cleanupLoading || !formData.content ? 0.6 : 1,
+                  fontWeight: '500',
+                  opacity: cleanupLoading || !formData.content ? 0.5 : 1,
                 }}
               >
                 {cleanupLoading ? 'Cleaning...' : '🧹 Clean-Up'}
@@ -772,14 +771,14 @@ function SnippetEditor() {
                 type="button"
                 onClick={handleHighlightClick}
                 style={{
-                  padding: '4px 12px',
-                  fontSize: '13px',
-                  backgroundColor: '#fbbf24',
-                  color: '#000000',
-                  border: 'none',
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  fontWeight: 'bold',
+                  fontWeight: '500',
                 }}
               >
                 Highlight
@@ -788,14 +787,14 @@ function SnippetEditor() {
                 type="button"
                 onClick={handleMathClick}
                 style={{
-                  padding: '4px 12px',
-                  fontSize: '13px',
-                  backgroundColor: '#8b5cf6',
-                  color: '#ffffff',
-                  border: 'none',
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
                   borderRadius: '4px',
                   cursor: 'pointer',
-                  fontWeight: 'bold',
+                  fontWeight: '500',
                 }}
               >
                 Math
@@ -809,15 +808,17 @@ function SnippetEditor() {
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
             onKeyDown={handleClozeShortcut}
             required={!formData.imageData}
-            rows={10}
+            rows={14}
             style={{
               width: '100%',
-              padding: '8px',
-              fontSize: '14px',
-              fontFamily: 'monospace',
+              padding: '16px',
+              fontSize: '16px',
+              lineHeight: '1.6',
+              fontFamily: 'inherit',
               border: '2px solid var(--border-color)',
               backgroundColor: '#FFF',
               borderRadius: '4px',
+              resize: 'vertical',
             }}
           />
         </div>
