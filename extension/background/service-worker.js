@@ -155,6 +155,31 @@ chrome.commands.onCommand.addListener(async (command) => {
 });
 
 /**
+ * Show toast with retry logic
+ */
+async function showToast(tabId, message, preview = '', type = 'success', retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      await chrome.tabs.sendMessage(tabId, {
+        action: 'showToast',
+        message,
+        preview,
+        type
+      });
+      console.log('[Snippet Extension] Toast sent successfully');
+      return true;
+    } catch (error) {
+      console.warn(`[Snippet Extension] Toast attempt ${i + 1} failed:`, error);
+      if (i < retries - 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+    }
+  }
+  console.error('[Snippet Extension] Toast failed after all retries');
+  return false;
+}
+
+/**
  * Handle Quick Save - instant save with no popup
  */
 async function handleQuickSave(info, tab) {
@@ -170,15 +195,7 @@ async function handleQuickSave(info, tab) {
   try {
     // Character limit check (~1000 words = ~6000 chars)
     if (selectedText.length > 6000) {
-      chrome.tabs.sendMessage(tab.id, {
-        action: 'showToast',
-        message: 'Text too long (max ~1000 words)',
-        type: 'error'
-      }, (response) => {
-        if (chrome.runtime.lastError) {
-          console.warn('Toast message failed:', chrome.runtime.lastError.message);
-        }
-      });
+      await showToast(tab.id, 'Text too long (max ~1000 words)', '', 'error');
       return;
     }
 
@@ -195,33 +212,13 @@ async function handleQuickSave(info, tab) {
 
     await createSnippet(snippetData);
 
-    console.log('[Snippet Extension] Snippet created, sending toast to tab:', tab.id);
+    console.log('[Snippet Extension] Snippet created, showing toast');
 
     // Show success toast
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'showToast',
-      message: 'Snippet saved!',
-      preview: snippetTitle,
-      type: 'success'
-    }, (response) => {
-      // Check if message was received
-      if (chrome.runtime.lastError) {
-        console.error('[Snippet Extension] Toast message failed:', chrome.runtime.lastError.message);
-      } else {
-        console.log('[Snippet Extension] Toast message sent successfully:', response);
-      }
-    });
+    await showToast(tab.id, 'Snippet saved!', snippetTitle, 'success');
   } catch (error) {
     console.error('Quick save error:', error);
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'showToast',
-      message: error.message || 'Failed to save snippet',
-      type: 'error'
-    }, (response) => {
-      if (chrome.runtime.lastError) {
-        console.warn('Error toast failed:', chrome.runtime.lastError.message);
-      }
-    });
+    await showToast(tab.id, error.message || 'Failed to save snippet', '', 'error');
   }
 }
 
@@ -262,11 +259,7 @@ async function handleImageSave(info, tab) {
 
     // Check size (300KB limit)
     if (blob.size > 300 * 1024) {
-      chrome.tabs.sendMessage(tab.id, {
-        action: 'showToast',
-        message: 'Image too large (max 300KB)',
-        type: 'error'
-      });
+      await showToast(tab.id, 'Image too large (max 300KB)', '', 'error');
       return;
     }
 
@@ -296,11 +289,7 @@ async function handleImageSave(info, tab) {
     reader.readAsDataURL(blob);
   } catch (error) {
     console.error('Image save error:', error);
-    chrome.tabs.sendMessage(tab.id, {
-      action: 'showToast',
-      message: 'Failed to save image',
-      type: 'error'
-    });
+    await showToast(tab.id, 'Failed to save image', '', 'error');
   }
 }
 
