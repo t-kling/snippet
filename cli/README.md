@@ -55,6 +55,19 @@ The CLI automatically improves long text blocks by adding sensible paragraph bre
 - Text with single newlines is preserved as-is
 - Long text blocks (200+ chars) without line breaks are split into paragraphs of 2-4 sentences
 
+## Offline Mode
+
+The CLI works seamlessly offline:
+- When you save a snippet without internet, it's queued locally in `~/.snippet-cli-queue.json`
+- The next time you save a snippet with internet, all queued snippets are automatically synced
+- You'll see status messages like:
+  - `⚠️  No internet connection`
+  - `📥 Saved to offline queue (will sync when online)`
+  - `🔄 Syncing N queued snippet(s)...`
+  - `✅ Synced N queued snippet(s)`
+
+**Browser Extension**: The browser extension has the same offline functionality, storing failed saves in `chrome.storage.local` and auto-syncing when connection is restored.
+
 ## Integration with System Shortcuts
 
 ### macOS Shortcuts
@@ -110,6 +123,7 @@ snippet help
 - ✅ Piped input support
 - ✅ Local configuration
 - ✅ Authentication with JWT
+- ✅ **Offline support** - snippets are queued locally and synced when connection is restored
 
 ## Getting Your JWT Token
 

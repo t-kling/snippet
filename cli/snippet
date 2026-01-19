@@ -7,6 +7,7 @@ const http = require('http');
 
 // Configuration
 const CONFIG_FILE = path.join(process.env.HOME, '.snippet-cli.json');
+const QUEUE_FILE = path.join(process.env.HOME, '.snippet-cli-queue.json');
 
 // Helper to read config
 function loadConfig() {
@@ -21,6 +22,70 @@ function loadConfig() {
 function saveConfig(config) {
   fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
   console.log('✅ Configuration saved');
+}
+
+// Queue management for offline support
+function loadQueue() {
+  if (!fs.existsSync(QUEUE_FILE)) {
+    return [];
+  }
+  try {
+    return JSON.parse(fs.readFileSync(QUEUE_FILE, 'utf8'));
+  } catch (error) {
+    console.error('⚠️  Warning: Could not read queue file');
+    return [];
+  }
+}
+
+function saveQueue(queue) {
+  fs.writeFileSync(QUEUE_FILE, JSON.stringify(queue, null, 2));
+}
+
+function addToQueue(snippetData) {
+  const queue = loadQueue();
+  queue.push({
+    data: snippetData,
+    timestamp: Date.now()
+  });
+  saveQueue(queue);
+  console.log('📥 Saved to offline queue (will sync when online)');
+  console.log(`   Queue size: ${queue.length} snippet(s)`);
+}
+
+async function syncQueue(config) {
+  const queue = loadQueue();
+
+  if (queue.length === 0) {
+    return;
+  }
+
+  console.log(`🔄 Syncing ${queue.length} queued snippet(s)...`);
+
+  const failed = [];
+  let synced = 0;
+
+  for (const item of queue) {
+    try {
+      await apiRequest('/snippets', 'POST', item.data, config.jwtToken, config.apiUrl);
+      synced++;
+    } catch (error) {
+      failed.push(item);
+    }
+  }
+
+  if (synced > 0) {
+    console.log(`✅ Synced ${synced} queued snippet(s)`);
+  }
+
+  if (failed.length > 0) {
+    console.log(`⚠️  ${failed.length} snippet(s) still offline`);
+    saveQueue(failed);
+  } else {
+    // Clear queue file
+    if (fs.existsSync(QUEUE_FILE)) {
+      fs.unlinkSync(QUEUE_FILE);
+    }
+  }
 }
 
 // Helper to make API requests
@@ -129,7 +194,7 @@ const commands = {
     });
   },
 
-  save: (args) => {
+  save: async (args) => {
     const config = loadConfig();
     const text = args.join(' ');
 
@@ -153,18 +218,31 @@ const commands = {
       topics: []
     };
 
-    apiRequest('/snippets', 'POST', snippetData, config.jwtToken, config.apiUrl)
-      .then(() => {
-        console.log('✅ Snippet saved!');
-        console.log(`   "${title}"`);
-      })
-      .catch(err => {
+    // First, try to sync any queued snippets
+    try {
+      await syncQueue(config);
+    } catch (err) {
+      // Continue even if sync fails
+    }
+
+    // Now try to save the new snippet
+    try {
+      await apiRequest('/snippets', 'POST', snippetData, config.jwtToken, config.apiUrl);
+      console.log('✅ Snippet saved!');
+      console.log(`   "${title}"`);
+    } catch (err) {
+      // Check if it's a network error
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT' || err.message.includes('getaddrinfo')) {
+        console.log('⚠️  No internet connection');
+        addToQueue(snippetData);
+      } else {
         console.error('❌ Failed to save snippet:', err.message);
         process.exit(1);
-      });
+      }
+    }
   },
 
-  image: (args) => {
+  image: async (args) => {
     const config = loadConfig();
     const imagePath = args[0];
 
@@ -207,15 +285,28 @@ const commands = {
       topics: []
     };
 
-    apiRequest('/snippets', 'POST', snippetData, config.jwtToken, config.apiUrl)
-      .then(() => {
-        console.log('✅ Image saved!');
-        console.log(`   ${filename}`);
-      })
-      .catch(err => {
+    // First, try to sync any queued snippets
+    try {
+      await syncQueue(config);
+    } catch (err) {
+      // Continue even if sync fails
+    }
+
+    // Now try to save the image
+    try {
+      await apiRequest('/snippets', 'POST', snippetData, config.jwtToken, config.apiUrl);
+      console.log('✅ Image saved!');
+      console.log(`   ${filename}`);
+    } catch (err) {
+      // Check if it's a network error
+      if (err.code === 'ENOTFOUND' || err.code === 'ECONNREFUSED' || err.code === 'ETIMEDOUT' || err.message.includes('getaddrinfo')) {
+        console.log('⚠️  No internet connection');
+        addToQueue(snippetData);
+      } else {
         console.error('❌ Failed to save image:', err.message);
         process.exit(1);
-      });
+      }
+    }
   },
 
   help: () => {

@@ -29,7 +29,53 @@ async function isLoggedIn() {
   return !!token;
 }
 
-async function createSnippet(snippetData) {
+// Queue management for offline support
+async function getOfflineQueue() {
+  const { offlineQueue } = await chrome.storage.local.get(['offlineQueue']);
+  return offlineQueue || [];
+}
+
+async function addToOfflineQueue(snippetData) {
+  const queue = await getOfflineQueue();
+  queue.push({
+    data: snippetData,
+    timestamp: Date.now()
+  });
+  await chrome.storage.local.set({ offlineQueue: queue });
+  console.log('[Snippet Extension] Added to offline queue. Queue size:', queue.length);
+}
+
+async function syncOfflineQueue() {
+  const queue = await getOfflineQueue();
+
+  if (queue.length === 0) {
+    return { synced: 0, failed: 0 };
+  }
+
+  console.log(`[Snippet Extension] Syncing ${queue.length} queued snippet(s)...`);
+
+  const failed = [];
+  let synced = 0;
+
+  for (const item of queue) {
+    try {
+      await createSnippetDirect(item.data);
+      synced++;
+    } catch (error) {
+      console.error('[Snippet Extension] Failed to sync queued item:', error);
+      failed.push(item);
+    }
+  }
+
+  // Update queue with only failed items
+  await chrome.storage.local.set({ offlineQueue: failed });
+
+  console.log(`[Snippet Extension] Synced ${synced}/${queue.length} queued snippet(s)`);
+
+  return { synced, failed: failed.length };
+}
+
+async function createSnippetDirect(snippetData) {
   const token = await getAuthToken();
   if (!token) {
     throw new Error('Not authenticated');
@@ -54,6 +100,31 @@ async function createSnippet(snippetData) {
   }
 
   return await response.json();
+}
+
+async function createSnippet(snippetData) {
+  // First, try to sync any queued snippets
+  try {
+    const result = await syncOfflineQueue();
+    if (result.synced > 0) {
+      console.log(`[Snippet Extension] Synced ${result.synced} queued snippet(s)`);
+    }
+  } catch (err) {
+    console.warn('[Snippet Extension] Failed to sync queue:', err);
+  }
+
+  // Now try to create the new snippet
+  try {
+    return await createSnippetDirect(snippetData);
+  } catch (error) {
+    // Check if it's a network error
+    if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+      console.log('[Snippet Extension] No internet connection, queuing snippet');
+      await addToOfflineQueue(snippetData);
+      throw new Error('Saved offline (will sync when online)');
+    }
+    throw error;
+  }
 }
 
 // ========== URL Cleaner Utilities (inlined) ==========
@@ -266,7 +337,13 @@ async function handleQuickSave(info, tab) {
     await showToast(tab.id, 'Snippet saved!', snippetTitle, 'success');
   } catch (error) {
     console.error('Quick save error:', error);
-    await showToast(tab.id, error.message || 'Failed to save snippet', '', 'error');
+
+    // Check if it's an offline save (success case) or a real error
+    if (error.message && error.message.includes('Saved offline')) {
+      await showToast(tab.id, error.message, snippetTitle, 'success');
+    } else {
+      await showToast(tab.id, error.message || 'Failed to save snippet', '', 'error');
+    }
   }
 }
 
