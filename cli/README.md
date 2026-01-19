@@ -70,33 +70,16 @@ The CLI works seamlessly offline:
 
 ## Integration with System Shortcuts
 
-### macOS Shortcuts
+**📖 See [KEYBOARD_SHORTCUTS.md](./KEYBOARD_SHORTCUTS.md) for detailed setup instructions!**
 
-Create a new Shortcut that:
-1. Gets selected text or clipboard content
-2. Runs Shell Script: `echo "$1" | /usr/local/bin/snippet save`
+Quick summary of options:
+- **macOS Shortcuts** (Built-in, Free) - Easiest option
+- **Keyboard Maestro** ($36) - Most powerful and reliable
+- **BetterTouchTool** ($22) - Great for customization
+- **Automator** (Built-in, Free) - Services menu integration
+- **Alfred Workflow** (If you use Alfred Powerpack)
 
-Assign a keyboard shortcut in System Preferences.
-
-### Keyboard Maestro
-
-Create a new macro:
-1. Trigger: Your chosen hotkey
-2. Action: Execute Shell Script with selected text as parameter
-3. Script: `echo "$KMVAR_Instance__TriggerValue" | snippet save`
-
-### BetterTouchTool
-
-1. Create new keyboard shortcut
-2. Action: Execute Terminal Command
-3. Command: `pbpaste | snippet save`
-
-### Screenshots
-
-For saving screenshots directly from the screenshot editor (Cmd+Shift+5):
-1. Take screenshot with Cmd+Shift+5
-2. Click "Share" button
-3. (Future: macOS Share Extension integration)
+All methods let you press a keyboard shortcut to save selected text from anywhere on your Mac.
 
 ## Examples
 
