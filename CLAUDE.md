@@ -100,7 +100,12 @@ Add new migrations as SQL files in `backend/src/db/migrations/`.
 
 ## Code Quality Reminders
 
-**Always verify closing braces**: When editing large functions or components with nested JSX, double-check that all opening braces `{` and parentheses `(` have matching closing braces `}` and `)`. Arrow functions should end with `};` syntax errors can occur if the function body isn't properly closed.
+**Always verify closing braces**: When editing large functions or components with nested JSX, double-check that all opening braces `{` and parentheses `(` have matching closing braces `}` and `)`.
+
+**Arrow function syntax**:
+- With explicit return: `const func = () => { return (<div>...</div>); };` ends with `};`
+- With implicit return: `const func = () => (<div>...</div>);` ends with just `);` (no curly braces, no extra semicolon)
+- Common mistake: Converting from explicit to implicit but leaving `};` at the end
 
 **Extract duplicated code**: When the same logic or constants appear in multiple places (especially 3+ times), extract them to shared helpers, constants, or components. Examples:
 - Functions/constants defined identically in multiple places should be hoisted to module level

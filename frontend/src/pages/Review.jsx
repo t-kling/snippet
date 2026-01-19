@@ -548,8 +548,7 @@ function Review() {
         </div>
       </div>
     </div>
-    );
-  };
+  );
 
   // Floating Layout - Full width with minimal controls
   const renderFloatingLayout = ({ currentCard, currentIndex, cards, showAnswer, setShowAnswer, reviewMode, setReviewMode, handleRate, handleNext, handlePriorityChange, updatingPriority, submitting, navigate, topic, source }) => (
@@ -616,8 +615,7 @@ function Review() {
         </div>
       </div>
     </div>
-    );
-  };
+  );
 
   // Balanced Layout - Wider sidebar with metadata
   const renderBalancedLayout = ({ currentCard, currentIndex, cards, showAnswer, setShowAnswer, reviewMode, setReviewMode, handleRate, handleNext, handlePriorityChange, updatingPriority, submitting, navigate, topic, source }) => (
@@ -754,8 +752,7 @@ function Review() {
           </div>
         </div>
       </div>
-    );
-  };
+  );
 
   // Bottom Layout - Controls at bottom like mobile app
   const renderBottomLayout = ({ currentCard, currentIndex, cards, showAnswer, setShowAnswer, reviewMode, setReviewMode, handleRate, handleNext, handlePriorityChange, updatingPriority, submitting, navigate, topic, source }) => (
@@ -814,8 +811,7 @@ function Review() {
           </div>
         </div>
       </div>
-    );
-  };
+  );
 
   // Main return - calls the appropriate layout
   return renderLayout();
