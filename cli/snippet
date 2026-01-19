@@ -1,0 +1,271 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const http = require('http');
+
+// Configuration
+const CONFIG_FILE = path.join(process.env.HOME, '.snippet-cli.json');
+
+// Helper to read config
+function loadConfig() {
+  if (!fs.existsSync(CONFIG_FILE)) {
+    console.error('❌ Not configured. Run: snippet config');
+    process.exit(1);
+  }
+  return JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
+}
+
+// Helper to save config
+function saveConfig(config) {
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2));
+  console.log('✅ Configuration saved');
+}
+
+// Helper to make API requests
+function apiRequest(endpoint, method, data, token, apiUrl) {
+  return new Promise((resolve, reject) => {
+    const url = new URL(endpoint, apiUrl);
+    const isHttps = url.protocol === 'https:';
+    const client = isHttps ? https : http;
+
+    const options = {
+      hostname: url.hostname,
+      port: url.port || (isHttps ? 443 : 80),
+      path: url.pathname + url.search,
+      method: method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    };
+
+    const req = client.request(options, (res) => {
+      let body = '';
+      res.on('data', chunk => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(JSON.parse(body));
+        } else {
+          reject(new Error(`HTTP ${res.statusCode}: ${body}`));
+        }
+      });
+    });
+
+    req.on('error', reject);
+
+    if (data) {
+      req.write(JSON.stringify(data));
+    }
+
+    req.end();
+  });
+}
+
+// Add sensible paragraph breaks to long text
+function addParagraphBreaks(text) {
+  // If text already has paragraph breaks (double newlines), return as-is
+  if (text.includes('\n\n')) {
+    return text;
+  }
+
+  // If text has single newlines, return as-is (respect original formatting)
+  if (text.includes('\n')) {
+    return text;
+  }
+
+  // Only process long text blocks without any line breaks
+  if (text.length < 200) {
+    return text;
+  }
+
+  // Split into sentences (basic heuristic: period/question/exclamation followed by space and capital)
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+
+  if (sentences.length <= 2) {
+    return text; // Too short to break up
+  }
+
+  // Group into paragraphs of 2-4 sentences
+  const paragraphs = [];
+  let currentParagraph = [];
+
+  sentences.forEach((sentence, i) => {
+    currentParagraph.push(sentence.trim());
+
+    // Create paragraph break after 2-4 sentences, or at the end
+    if (currentParagraph.length >= 3 || i === sentences.length - 1) {
+      paragraphs.push(currentParagraph.join(' '));
+      currentParagraph = [];
+    }
+  });
+
+  return paragraphs.join('\n\n');
+}
+
+// Commands
+const commands = {
+  config: () => {
+    console.log('🔧 Snippet CLI Configuration\n');
+
+    const readline = require('readline');
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    const config = {};
+
+    rl.question('API URL (default: http://localhost:5001/api): ', (apiUrl) => {
+      config.apiUrl = apiUrl.trim() || 'http://localhost:5001/api';
+
+      rl.question('JWT Token: ', (token) => {
+        config.jwtToken = token.trim();
+
+        rl.close();
+        saveConfig(config);
+      });
+    });
+  },
+
+  save: (args) => {
+    const config = loadConfig();
+    const text = args.join(' ');
+
+    if (!text) {
+      console.error('❌ No text provided');
+      console.log('Usage: snippet save <text>');
+      console.log('   Or: echo "text" | snippet save');
+      process.exit(1);
+    }
+
+    const cleanedText = addParagraphBreaks(text);
+    const title = cleanedText.substring(0, 50).trim() + (cleanedText.length > 50 ? '...' : '');
+
+    const snippetData = {
+      title: title,
+      type: 'excerpt',
+      content: cleanedText,
+      source: 'CLI',
+      priority: 'medium',
+      inQueue: true,
+      topics: []
+    };
+
+    apiRequest('/snippets', 'POST', snippetData, config.jwtToken, config.apiUrl)
+      .then(() => {
+        console.log('✅ Snippet saved!');
+        console.log(`   "${title}"`);
+      })
+      .catch(err => {
+        console.error('❌ Failed to save snippet:', err.message);
+        process.exit(1);
+      });
+  },
+
+  image: (args) => {
+    const config = loadConfig();
+    const imagePath = args[0];
+
+    if (!imagePath) {
+      console.error('❌ No image path provided');
+      console.log('Usage: snippet image <path>');
+      process.exit(1);
+    }
+
+    if (!fs.existsSync(imagePath)) {
+      console.error('❌ Image file not found:', imagePath);
+      process.exit(1);
+    }
+
+    // Read image and convert to base64
+    const imageBuffer = fs.readFileSync(imagePath);
+    const ext = path.extname(imagePath).toLowerCase();
+    let mimeType = 'image/png';
+
+    if (ext === '.jpg' || ext === '.jpeg') mimeType = 'image/jpeg';
+    if (ext === '.gif') mimeType = 'image/gif';
+    if (ext === '.webp') mimeType = 'image/webp';
+
+    const base64data = `data:${mimeType};base64,${imageBuffer.toString('base64')}`;
+
+    // Check size (300KB limit)
+    if (imageBuffer.length > 300 * 1024) {
+      console.error('❌ Image too large (max 300KB)');
+      process.exit(1);
+    }
+
+    const filename = path.basename(imagePath);
+    const snippetData = {
+      title: `Image: ${filename}`,
+      type: 'excerpt',
+      imageData: base64data,
+      source: 'CLI',
+      priority: 'medium',
+      inQueue: true,
+      topics: []
+    };
+
+    apiRequest('/snippets', 'POST', snippetData, config.jwtToken, config.apiUrl)
+      .then(() => {
+        console.log('✅ Image saved!');
+        console.log(`   ${filename}`);
+      })
+      .catch(err => {
+        console.error('❌ Failed to save image:', err.message);
+        process.exit(1);
+      });
+  },
+
+  help: () => {
+    console.log(`
+📚 Snippet CLI - Save text and images to your Snippet library
+
+Commands:
+  config              Configure API URL and authentication token
+  save <text>         Save text as a snippet
+  image <path>        Save an image as a snippet
+  help                Show this help message
+
+Examples:
+  snippet config
+  snippet save "This is some important text I want to remember"
+  snippet image ~/Desktop/screenshot.png
+  echo "Piped text" | snippet save
+
+Keyboard Shortcut Integration:
+  - macOS Shortcuts: Use "Run Shell Script" action with this CLI
+  - Keyboard Maestro: Execute shell script with selected text
+  - BetterTouchTool: Trigger shell script with hotkey
+    `);
+  }
+};
+
+// Main
+const args = process.argv.slice(2);
+
+if (args.length === 0) {
+  // Check if stdin has data (piped input)
+  if (process.stdin.isTTY) {
+    commands.help();
+  } else {
+    // Read from stdin
+    let stdinData = '';
+    process.stdin.on('data', chunk => stdinData += chunk);
+    process.stdin.on('end', () => {
+      commands.save([stdinData.trim()]);
+    });
+  }
+} else {
+  const command = args[0];
+  const commandArgs = args.slice(1);
+
+  if (commands[command]) {
+    commands[command](commandArgs);
+  } else {
+    console.error(`❌ Unknown command: ${command}`);
+    commands.help();
+    process.exit(1);
+  }
+}

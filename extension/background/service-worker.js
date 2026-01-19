@@ -72,6 +72,51 @@ function cleanUrl(url) {
   }
 }
 
+// ========== Text Formatting Utilities ==========
+
+/**
+ * Add sensible paragraph breaks to long text blocks
+ */
+function addParagraphBreaks(text) {
+  // If text already has paragraph breaks (double newlines), return as-is
+  if (text.includes('\n\n')) {
+    return text;
+  }
+
+  // If text has single newlines, return as-is (respect original formatting)
+  if (text.includes('\n')) {
+    return text;
+  }
+
+  // Only process long text blocks without any line breaks
+  if (text.length < 200) {
+    return text;
+  }
+
+  // Split into sentences (basic heuristic: period/question/exclamation followed by space and capital)
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+
+  if (sentences.length <= 2) {
+    return text; // Too short to break up
+  }
+
+  // Group into paragraphs of 2-4 sentences
+  const paragraphs = [];
+  let currentParagraph = [];
+
+  sentences.forEach((sentence, i) => {
+    currentParagraph.push(sentence.trim());
+
+    // Create paragraph break after 2-4 sentences, or at the end
+    if (currentParagraph.length >= 3 || i === sentences.length - 1) {
+      paragraphs.push(currentParagraph.join(' '));
+      currentParagraph = [];
+    }
+  });
+
+  return paragraphs.join('\n\n');
+}
+
 // ========== Service Worker Logic ==========
 
 // Initialize API on extension load
@@ -187,14 +232,17 @@ async function handleQuickSave(info, tab) {
   const pageUrl = cleanUrl(info.pageUrl || tab.url);
   const pageTitle = tab.title;
 
+  // Add paragraph breaks to improve readability
+  const formattedText = addParagraphBreaks(selectedText);
+
   // Auto-generate title from first 50 chars
-  const snippetTitle = selectedText.length > 50
-    ? selectedText.substring(0, 50).trim() + '...'
-    : selectedText.trim();
+  const snippetTitle = formattedText.length > 50
+    ? formattedText.substring(0, 50).trim() + '...'
+    : formattedText.trim();
 
   try {
     // Character limit check (~1000 words = ~6000 chars)
-    if (selectedText.length > 6000) {
+    if (formattedText.length > 6000) {
       await showToast(tab.id, 'Text too long (max ~1000 words)', '', 'error');
       return;
     }
@@ -202,7 +250,7 @@ async function handleQuickSave(info, tab) {
     const snippetData = {
       title: snippetTitle,
       type: 'excerpt',
-      content: selectedText,
+      content: formattedText,
       source: pageTitle,
       url: pageUrl,
       priority: 'medium',
@@ -230,10 +278,13 @@ async function handleFullEdit(info, tab) {
   const pageUrl = cleanUrl(info.pageUrl || tab.url);
   const pageTitle = tab.title;
 
+  // Add paragraph breaks to improve readability
+  const formattedText = addParagraphBreaks(selectedText);
+
   // Store selection data for popup to access
   await chrome.storage.local.set({
     pendingSnippet: {
-      content: selectedText,
+      content: formattedText,
       source: pageTitle,
       url: pageUrl,
       timestamp: Date.now()

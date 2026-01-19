@@ -1,0 +1,16 @@
+{
+  "name": "snippet-cli",
+  "version": "1.0.0",
+  "description": "CLI tool for saving text and images to Snippet from anywhere on your system",
+  "main": "snippet",
+  "bin": {
+    "snippet": "./snippet"
+  },
+  "scripts": {
+    "install-global": "npm link"
+  },
+  "keywords": ["snippet", "cli", "spaced-repetition", "notes"],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}
