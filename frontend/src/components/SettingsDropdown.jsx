@@ -344,12 +344,11 @@ function SettingsDropdown() {
                   cursor: 'pointer',
                 }}
               >
-                <option value="sidebar">Sidebar (Current)</option>
+                <option value="sidebar">Default</option>
                 <option value="topbar">Centered with Top Bar</option>
-                <option value="floating">Full Width with Floating Controls</option>
-                <option value="balanced">Balanced Sidebar</option>
+                <option value="floating">Full Width with Minimal Controls</option>
+                <option value="balanced">Sidebar with Metadata</option>
                 <option value="bottom">Bottom Controls Bar</option>
-                <option value="split">Split View with Metadata</option>
               </select>
             </div>
 

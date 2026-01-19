@@ -97,3 +97,7 @@ Add new migrations as SQL files in `backend/src/db/migrations/`.
 **CORS**: Configured in `server.js` with specific allowed origins for dev and production Vercel URLs.
 
 **No test suite exists** - tests would need to be added.
+
+## Code Quality Reminders
+
+**Always verify closing braces**: When editing large functions or components with nested JSX, double-check that all opening braces `{` and parentheses `(` have matching closing braces `}` and `)`. Arrow functions should end with `};` syntax errors can occur if the function body isn't properly closed.
