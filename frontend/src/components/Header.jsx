@@ -61,6 +61,20 @@ function Header() {
               Home
             </button>
           )}
+          <button
+            onClick={() => navigate('/about')}
+            style={{
+              padding: '8px 16px',
+              fontSize: '14px',
+              backgroundColor: location.pathname === '/about' ? '#ffffff' : 'transparent',
+              color: location.pathname === '/about' ? 'var(--header-dark)' : '#ffffff',
+              border: '2px solid #ffffff',
+              borderRadius: '4px',
+              cursor: 'pointer',
+            }}
+          >
+            About
+          </button>
           <SettingsDropdown />
           <button
             onClick={logout}

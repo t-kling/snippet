@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { snippetAPI, reviewAPI } from '../api/client';
 import { useSettings, FONTS } from '../contexts/SettingsContext';
+import JSZip from 'jszip';
 
 function SettingsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,19 +32,44 @@ function SettingsDropdown() {
       const response = await snippetAPI.exportLibrary();
       const data = response.data;
 
-      // Create a blob and download
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      // Create a ZIP file
+      const zip = new JSZip();
+
+      // Add library.json (without embedded images)
+      const libraryData = {
+        version: data.version,
+        exportedAt: data.exportedAt,
+        snippets: data.snippets,
+        topics: data.topics,
+      };
+      zip.file('library.json', JSON.stringify(libraryData, null, 2));
+
+      // Add images to images/ folder
+      if (data.images && Object.keys(data.images).length > 0) {
+        const imagesFolder = zip.folder('images');
+        for (const [filename, base64Data] of Object.entries(data.images)) {
+          // Remove data:image/... prefix if present
+          const base64Content = base64Data.includes(',')
+            ? base64Data.split(',')[1]
+            : base64Data;
+          imagesFolder.file(filename, base64Content, { base64: true });
+        }
+      }
+
+      // Generate ZIP and download
+      const blob = await zip.generateAsync({ type: 'blob' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `snippet-library-${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `snippet-library-${new Date().toISOString().split('T')[0]}.zip`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
       setIsOpen(false);
-      alert(`Exported ${data.snippets.length} snippets successfully!`);
+      const imageCount = Object.keys(data.images || {}).length;
+      alert(`Exported ${data.snippets.length} snippets (${imageCount} with images) successfully!`);
     } catch (error) {
       console.error('Export error:', error);
       alert('Failed to export library');
@@ -63,21 +89,96 @@ function SettingsDropdown() {
 
     setImporting(true);
     try {
-      const text = await file.text();
-      const data = JSON.parse(text);
+      console.log('Step 1: Reading file...');
+      let data;
 
-      if (!data.snippets || !Array.isArray(data.snippets)) {
-        throw new Error('Invalid file format');
+      // Check if it's a ZIP file
+      if (file.name.endsWith('.zip')) {
+        console.log('Detected ZIP file, extracting...');
+        const zip = new JSZip();
+        const zipContent = await zip.loadAsync(file);
+
+        // Read library.json
+        const libraryFile = zipContent.file('library.json');
+        if (!libraryFile) {
+          throw new Error('ZIP file must contain library.json');
+        }
+        const libraryText = await libraryFile.async('text');
+        data = JSON.parse(libraryText);
+
+        // Read images and attach them back to snippets
+        const imagesFolder = zipContent.folder('images');
+        if (imagesFolder) {
+          const imageFiles = [];
+          imagesFolder.forEach((relativePath, file) => {
+            if (!file.dir) {
+              imageFiles.push({ name: relativePath, file });
+            }
+          });
+
+          // Load all images
+          for (const { name, file } of imageFiles) {
+            const base64 = await file.async('base64');
+            // Find snippet(s) with this image_filename and restore image_data
+            for (const snippet of data.snippets) {
+              if (snippet.image_filename === name) {
+                snippet.image_data = `data:image/png;base64,${base64}`;
+                delete snippet.image_filename; // Clean up
+              }
+            }
+          }
+        }
+      } else {
+        // Handle old JSON format
+        console.log('Detected JSON file');
+        const text = await file.text();
+        data = JSON.parse(text);
       }
 
+      console.log('Step 2: Validating data...');
+      console.log('Data has snippets?', !!data.snippets);
+      console.log('Snippets is array?', Array.isArray(data.snippets));
+      console.log('Number of snippets:', data.snippets?.length);
+      console.log('Data has topics?', !!data.topics);
+      console.log('Topics is array?', Array.isArray(data.topics));
+
+      if (!data.snippets || !Array.isArray(data.snippets)) {
+        console.error('Validation failed: snippets is not valid');
+        throw new Error('Invalid file format - missing or invalid snippets array');
+      }
+
+      console.log('Step 3: Calling API to import...');
       const response = await snippetAPI.importLibrary(data);
-      alert(`Imported ${response.data.importedCount} of ${response.data.totalAttempted} snippets successfully!`);
+      console.log('Import response:', response.data);
+
+      let message = `Imported ${response.data.importedCount} of ${response.data.totalAttempted} snippets successfully!`;
+      if (response.data.failedCount > 0) {
+        message += `\n\nFailed: ${response.data.failedCount}`;
+        if (response.data.errors && response.data.errors.length > 0) {
+          message += `\n\nErrors:\n${response.data.errors.join('\n')}`;
+        }
+      }
+      alert(message);
 
       // Reload the page to show imported snippets
       window.location.reload();
     } catch (error) {
-      console.error('Import error:', error);
-      alert('Failed to import library. Please check the file format.');
+      console.error('Import error details:', error);
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+
+      let errorMessage = 'Failed to import library. ';
+      if (error.message.includes('JSON')) {
+        errorMessage += 'File is not valid JSON.';
+      } else if (error.message.includes('snippets')) {
+        errorMessage += 'File format is invalid (missing snippets).';
+      } else if (error.response) {
+        errorMessage += `Server error: ${error.response.data?.error || error.response.statusText}`;
+      } else {
+        errorMessage += error.message || 'Please check the file format.';
+      }
+
+      alert(errorMessage);
     } finally {
       setImporting(false);
       // Reset file input
@@ -329,7 +430,7 @@ function SettingsDropdown() {
       <input
         ref={fileInputRef}
         type="file"
-        accept="application/json,.json"
+        accept="application/zip,.zip,application/json,.json"
         onChange={handleFileSelect}
         style={{ display: 'none' }}
       />

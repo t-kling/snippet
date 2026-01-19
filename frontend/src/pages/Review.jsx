@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { reviewAPI } from '../api/client';
+import { reviewAPI, snippetAPI } from '../api/client';
 import { renderMixedContent } from '../utils/latex';
 import ImageWithClozes from '../components/ImageWithClozes';
 import Header from '../components/Header';
@@ -14,6 +14,7 @@ function Review() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [reviewMode, setReviewMode] = useState('study'); // 'study', 'browse', 'appreciation'
+  const [updatingPriority, setUpdatingPriority] = useState(false);
   const navigate = useNavigate();
 
   const topic = searchParams.get('topic');
@@ -80,6 +81,27 @@ function Review() {
       setShowAnswer(reviewMode === 'appreciation');
     } else {
       setCards([]);
+    }
+  };
+
+  const handlePriorityChange = async (newPriority) => {
+    if (updatingPriority || !currentCard) return;
+
+    setUpdatingPriority(true);
+    try {
+      await snippetAPI.update(currentCard.id, { priority: newPriority });
+
+      // Update the priority in the local state
+      setCards(prevCards => {
+        const updatedCards = [...prevCards];
+        updatedCards[currentIndex] = { ...updatedCards[currentIndex], priority: newPriority };
+        return updatedCards;
+      });
+    } catch (error) {
+      console.error('Failed to update priority:', error);
+      alert('Failed to update priority');
+    } finally {
+      setUpdatingPriority(false);
     }
   };
 
@@ -507,6 +529,86 @@ function Review() {
             </>
           )}
         </div>
+
+        {showAnswer && (
+          <div style={{
+            marginBottom: '15px',
+            padding: '15px',
+            backgroundColor: 'var(--bg-primary)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '8px',
+          }}>
+            <div style={{
+              fontSize: '13px',
+              fontWeight: 'bold',
+              color: 'var(--text-secondary)',
+              marginBottom: '10px',
+              textAlign: 'center',
+            }}>
+              Priority
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: '8px',
+            }}>
+              <button
+                onClick={() => handlePriorityChange('low')}
+                disabled={updatingPriority}
+                style={{
+                  padding: '10px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: currentCard.priority === 'low' ? 'var(--text-secondary)' : 'var(--bg-secondary)',
+                  color: currentCard.priority === 'low' ? 'white' : 'var(--text-primary)',
+                  border: currentCard.priority === 'low' ? '2px solid var(--text-secondary)' : '2px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: updatingPriority ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: updatingPriority ? 0.6 : 1,
+                }}
+              >
+                Low
+              </button>
+              <button
+                onClick={() => handlePriorityChange('medium')}
+                disabled={updatingPriority}
+                style={{
+                  padding: '10px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: currentCard.priority === 'medium' ? 'var(--blue-button)' : 'var(--bg-secondary)',
+                  color: currentCard.priority === 'medium' ? 'white' : 'var(--text-primary)',
+                  border: currentCard.priority === 'medium' ? '2px solid var(--blue-button)' : '2px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: updatingPriority ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: updatingPriority ? 0.6 : 1,
+                }}
+              >
+                Medium
+              </button>
+              <button
+                onClick={() => handlePriorityChange('high')}
+                disabled={updatingPriority}
+                style={{
+                  padding: '10px',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
+                  backgroundColor: currentCard.priority === 'high' ? 'var(--accent)' : 'var(--bg-secondary)',
+                  color: currentCard.priority === 'high' ? 'white' : 'var(--text-primary)',
+                  border: currentCard.priority === 'high' ? '2px solid var(--accent)' : '2px solid var(--border-color)',
+                  borderRadius: '6px',
+                  cursor: updatingPriority ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s',
+                  opacity: updatingPriority ? 0.6 : 1,
+                }}
+              >
+                High
+              </button>
+            </div>
+          </div>
+        )}
 
         {!showAnswer ? (
           <button

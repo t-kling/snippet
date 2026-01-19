@@ -10,6 +10,7 @@ import Review from './pages/Review';
 import TopicReview from './pages/TopicReview';
 import SourceReview from './pages/SourceReview';
 import Stats from './pages/Stats';
+import About from './pages/About';
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -115,6 +116,14 @@ function App() {
               element={
                 <PrivateRoute>
                   <Stats />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <PrivateRoute>
+                  <About />
                 </PrivateRoute>
               }
             />

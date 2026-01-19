@@ -426,11 +426,28 @@ const exportLibrary = async (req, res) => {
       [req.userId]
     );
 
+    // Separate images from snippets for ZIP export
+    const images = {};
+    const snippetsForExport = snippetsResult.rows.map((snippet, index) => {
+      const exportSnippet = { ...snippet };
+
+      // If snippet has image data, store it separately
+      if (snippet.image_data) {
+        const imageFilename = `image_${snippet.id || index}.png`;
+        images[imageFilename] = snippet.image_data;
+        exportSnippet.image_filename = imageFilename;
+        delete exportSnippet.image_data; // Remove base64 from JSON
+      }
+
+      return exportSnippet;
+    });
+
     const exportData = {
-      version: '1.0',
+      version: '1.1', // Updated version for new format
       exportedAt: new Date().toISOString(),
-      snippets: snippetsResult.rows,
+      snippets: snippetsForExport,
       topics: topicsResult.rows.map(r => r.name),
+      images: images, // Include image data for frontend to extract
     };
 
     res.json(exportData);
@@ -442,13 +459,25 @@ const exportLibrary = async (req, res) => {
 
 const importLibrary = async (req, res) => {
   try {
+    console.log('=== IMPORT LIBRARY START ===');
+    console.log('Request body keys:', Object.keys(req.body));
+    console.log('Has snippets?', !!req.body.snippets);
+    console.log('Snippets is array?', Array.isArray(req.body.snippets));
+    console.log('Snippets length:', req.body.snippets?.length);
+    console.log('Has topics?', !!req.body.topics);
+    console.log('Topics is array?', Array.isArray(req.body.topics));
+    console.log('First snippet sample:', JSON.stringify(req.body.snippets?.[0], null, 2));
+
     const { snippets, topics } = req.body;
 
     if (!snippets || !Array.isArray(snippets)) {
-      return res.status(400).json({ error: 'Invalid import data' });
+      console.error('Validation failed: snippets is not valid');
+      return res.status(400).json({ error: 'Invalid import data - snippets must be an array' });
     }
 
     let importedCount = 0;
+    let failedCount = 0;
+    const errors = [];
     const topicMap = new Map(); // Map topic names to IDs
 
     // First, create all topics
@@ -474,24 +503,46 @@ const importLibrary = async (req, res) => {
     }
 
     // Import each snippet
-    for (const snippet of snippets) {
+    for (let i = 0; i < snippets.length; i++) {
+      const snippet = snippets[i];
       try {
+        console.log(`Importing snippet ${i + 1}/${snippets.length}: ${snippet.title}`);
+
+        // Validate required fields
+        if (!snippet.type) {
+          throw new Error('Missing required field: type');
+        }
+
+        // Properly handle JSON fields that might be objects or strings
+        const normalizeClozeData = (data) => {
+          if (!data) return '[]';
+          if (typeof data === 'string') return data;
+          return JSON.stringify(data);
+        };
+
         // Create snippet
         const snippetResult = await db.query(
-          `INSERT INTO snippets (user_id, title, type, source, content, cloze_data, in_queue, to_edit, image_data, image_clozes)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          `INSERT INTO snippets (user_id, title, type, source, content, cloze_data, in_queue, to_edit, image_data, image_clozes, author, url, page, timestamp, why_made_this, parent_snippet, priority)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
            RETURNING *`,
           [
             req.userId,
-            snippet.title,
+            snippet.title || 'Untitled',
             snippet.type,
             snippet.source || null,
             snippet.content || '',
-            snippet.cloze_data || '[]',
+            normalizeClozeData(snippet.cloze_data),
             snippet.in_queue !== false,
             snippet.to_edit || false,
             snippet.image_data || null,
-            snippet.image_clozes || '[]',
+            normalizeClozeData(snippet.image_clozes),
+            snippet.author || null,
+            snippet.url || null,
+            snippet.page || null,
+            snippet.timestamp || null,
+            snippet.why_made_this || null,
+            snippet.parent_snippet || null,
+            snippet.priority || 'medium',
           ]
         );
 
@@ -538,20 +589,30 @@ const importLibrary = async (req, res) => {
         }
 
         importedCount++;
+        console.log(`Successfully imported snippet ${i + 1}`);
       } catch (snippetError) {
-        console.error('Error importing snippet:', snippetError);
+        failedCount++;
+        const errorMsg = `Snippet ${i + 1} (${snippet.title || 'Untitled'}): ${snippetError.message}`;
+        console.error('Error importing snippet:', errorMsg);
+        errors.push(errorMsg);
         // Continue with next snippet
       }
     }
 
+    console.log('=== IMPORT LIBRARY COMPLETE ===');
+    console.log(`Imported: ${importedCount}, Failed: ${failedCount}`);
+
     res.json({
       message: 'Library imported successfully',
       importedCount,
-      totalAttempted: snippets.length
+      totalAttempted: snippets.length,
+      failedCount,
+      errors: errors.slice(0, 10) // Only return first 10 errors
     });
   } catch (error) {
     console.error('Import library error:', error);
-    res.status(500).json({ error: 'Failed to import library' });
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ error: 'Failed to import library: ' + error.message });
   }
 };
 

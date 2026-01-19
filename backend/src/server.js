@@ -31,7 +31,8 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
+// Increase body size limit for library import/export (default is 100kb)
+app.use(express.json({ limit: '10mb' }));
 
 // Routes
 app.use('/api/auth', authRoutes);
