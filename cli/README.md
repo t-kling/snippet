@@ -115,12 +115,12 @@ snippet help
 **IMPORTANT**: You must get the token from your **production** deployment, not localhost!
 
 1. Go to your Vercel frontend deployment in a browser
-   - Check your Vercel dashboard to find the frontend URL
-   - It will look like: `https://snippet-xxxxx.vercel.app` or `https://your-custom-domain.com`
+   - URL: `https://snippet-flame-three.vercel.app`
+   - (Or check your Vercel dashboard to find your frontend URL)
 2. **Log in** to your account
 3. Open Developer Tools (press **F12** or right-click → Inspect)
 4. Go to **Console** tab
-5. Type: `localStorage.getItem('jwtToken')`
+5. Type: `localStorage.getItem('token')`
 6. You should see a long string like: `"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
 7. Copy the token (without the surrounding quotes)
 8. Use it in `snippet config`

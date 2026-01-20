@@ -19,9 +19,10 @@ When running `snippet config`, you'll be asked for:
 
 - **JWT Token**: Get this from your logged-in session:
   - **IMPORTANT**: Open your production Snippet web app (the Vercel deployment, NOT localhost)
+  - URL: `https://snippet-flame-three.vercel.app`
   - Login to your account
   - Open Developer Tools (F12) → Console tab
-  - Run: `localStorage.getItem('jwtToken')`
+  - Run: `localStorage.getItem('token')`
   - You should see a long string like: `"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
   - Copy the token (without the quotes) and paste it
 
