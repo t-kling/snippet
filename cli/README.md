@@ -21,9 +21,9 @@ snippet config
 
 You'll be prompted for:
 - **API URL**:
-  - Production: `https://snippet-api.vercel.app/api`
+  - Production: `https://snippet-pr6g.vercel.app/api`
   - Local development: `http://localhost:5001/api` (default)
-- **JWT Token**: Your authentication token
+- **JWT Token**: Your authentication token (see below)
 
 Configuration is saved to `~/.snippet-cli.json`
 
@@ -112,13 +112,20 @@ snippet help
 
 ## Getting Your JWT Token
 
-1. Open your Snippet web app in a browser
-2. Log in
-3. Open Developer Tools (F12)
-4. Go to Console tab
+**IMPORTANT**: You must get the token from your **production** deployment, not localhost!
+
+1. Go to your Vercel frontend deployment in a browser
+   - Check your Vercel dashboard to find the frontend URL
+   - It will look like: `https://snippet-xxxxx.vercel.app` or `https://your-custom-domain.com`
+2. **Log in** to your account
+3. Open Developer Tools (press **F12** or right-click → Inspect)
+4. Go to **Console** tab
 5. Type: `localStorage.getItem('jwtToken')`
-6. Copy the token (without quotes)
-7. Use it in `snippet config`
+6. You should see a long string like: `"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+7. Copy the token (without the surrounding quotes)
+8. Use it in `snippet config`
+
+**If you get `null`**: You're either not logged in, or you're on the wrong URL (localhost instead of production)
 
 ## Future Enhancements
 

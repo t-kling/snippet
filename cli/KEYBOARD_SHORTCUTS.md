@@ -14,14 +14,16 @@ snippet config
 When running `snippet config`, you'll be asked for:
 
 - **API URL**:
-  - For production: `https://snippet-api.vercel.app/api`
+  - For production: `https://snippet-pr6g.vercel.app/api`
   - For local development: `http://localhost:5001/api`
 
 - **JWT Token**: Get this from your logged-in session:
-  - Open Snippet web app in browser and login
-  - Open Developer Tools (F12) → Console
+  - **IMPORTANT**: Open your production Snippet web app (the Vercel deployment, NOT localhost)
+  - Login to your account
+  - Open Developer Tools (F12) → Console tab
   - Run: `localStorage.getItem('jwtToken')`
-  - Copy the token (without quotes) and paste it
+  - You should see a long string like: `"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."`
+  - Copy the token (without the quotes) and paste it
 
 ---
 
