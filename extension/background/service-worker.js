@@ -10,7 +10,7 @@ const API_URLS = {
   production: 'https://snippet-pr6g.vercel.app/api'
 };
 
-let API_BASE_URL = API_URLS.local;
+let API_BASE_URL = API_URLS.production;
 
 async function initializeAPI() {
   const { apiUrl } = await chrome.storage.local.get(['apiUrl']);

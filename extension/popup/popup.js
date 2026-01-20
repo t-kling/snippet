@@ -6,10 +6,10 @@
 
 const API_URLS = {
   local: 'http://localhost:5001/api',
-  production: 'https://snippet-api.vercel.app/api'
+  production: 'https://snippet-pr6g.vercel.app/api'
 };
 
-let API_BASE_URL = API_URLS.local;
+let API_BASE_URL = API_URLS.production;
 
 async function getAuthToken() {
   const { jwtToken } = await chrome.storage.local.get(['jwtToken']);

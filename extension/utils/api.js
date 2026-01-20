@@ -5,11 +5,11 @@
 // API base URL - can be configured
 const API_URLS = {
   local: 'http://localhost:5001/api',
-  production: 'https://snippet-api.vercel.app/api' // Update with actual production URL
+  production: 'https://snippet-pr6g.vercel.app/api'
 };
 
-// Default to local for development
-let API_BASE_URL = API_URLS.local;
+// Default to production
+let API_BASE_URL = API_URLS.production;
 
 /**
  * Set API URL based on environment
