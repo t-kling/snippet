@@ -11,15 +11,95 @@ export const renderMixedContent = (content, hideClozes = false) => {
   if (!content) return [];
 
   const parts = [];
-  let currentIndex = 0;
   let key = 0;
 
   // Regular expressions
+  const codeBlockRegex = /```(\w*)\n?([\s\S]*?)```/g;
   const mathRegex = /\$\$(.*?)\$\$/gs;
   const clozeRegex = /\{\{c\d+::(.*?)\}\}/g;
-  const highlightRegex = /==(.*?)==/g;
 
-  // Find all math blocks
+  // First, find all code blocks (process these first as they can contain anything)
+  const codeBlocks = [];
+  let codeMatch;
+  while ((codeMatch = codeBlockRegex.exec(content)) !== null) {
+    codeBlocks.push({
+      start: codeMatch.index,
+      end: codeMatch.index + codeMatch[0].length,
+      language: codeMatch[1],
+      code: codeMatch[2],
+    });
+  }
+
+  // Process content, handling code blocks first
+  let position = 0;
+
+  for (const codeBlock of codeBlocks) {
+    // Process text before code block (may contain math, clozes, highlights)
+    if (position < codeBlock.start) {
+      const textChunk = content.substring(position, codeBlock.start);
+      parts.push(...renderTextWithMathClozesHighlights(textChunk, hideClozes, key));
+      key += 1000;
+    }
+
+    // Render code block
+    let codeContent = codeBlock.code;
+
+    // Handle clozes inside code blocks
+    if (hideClozes) {
+      codeContent = codeContent.replace(clozeRegex, '[...]');
+    } else {
+      codeContent = codeContent.replace(clozeRegex, '$1');
+    }
+
+    parts.push(
+      <pre
+        key={key++}
+        style={{
+          backgroundColor: '#f5f5f5',
+          padding: '12px 16px',
+          borderRadius: '6px',
+          overflow: 'auto',
+          margin: '12px 0',
+          border: '1px solid #e0e0e0',
+        }}
+      >
+        <code
+          style={{
+            fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace',
+            fontSize: '14px',
+            lineHeight: '1.5',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+          }}
+        >
+          {codeContent}
+        </code>
+      </pre>
+    );
+
+    position = codeBlock.end;
+  }
+
+  // Process remaining text after last code block
+  if (position < content.length) {
+    const textChunk = content.substring(position);
+    parts.push(...renderTextWithMathClozesHighlights(textChunk, hideClozes, key));
+  }
+
+  return parts;
+};
+
+/**
+ * Renders text with math blocks, cloze deletions, and highlights (but not code blocks)
+ */
+const renderTextWithMathClozesHighlights = (content, hideClozes, startKey = 0) => {
+  const parts = [];
+  let key = startKey;
+
+  const mathRegex = /\$\$(.*?)\$\$/gs;
+  const clozeRegex = /\{\{c\d+::(.*?)\}\}/g;
+
+  // Find all math blocks in this chunk
   const mathBlocks = [];
   let mathMatch;
   while ((mathMatch = mathRegex.exec(content)) !== null) {
@@ -27,11 +107,9 @@ export const renderMixedContent = (content, hideClozes = false) => {
       start: mathMatch.index,
       end: mathMatch.index + mathMatch[0].length,
       content: mathMatch[1],
-      fullMatch: mathMatch[0],
     });
   }
 
-  // Process content in chunks (math vs non-math)
   let position = 0;
 
   for (const mathBlock of mathBlocks) {
@@ -68,7 +146,6 @@ export const renderMixedContent = (content, hideClozes = false) => {
         />
       );
     } catch (error) {
-      // If LaTeX rendering fails, show the raw content
       parts.push(
         <span key={key++} style={{ color: '#cc0000' }}>
           {`$$${mathContent}$$`}
@@ -238,4 +315,19 @@ export const insertMath = (content, selectionStart, selectionEnd) => {
   const after = content.substring(selectionEnd);
 
   return `${before}$$${selectedText}$$${after}`;
+};
+
+/**
+ * Insert code block delimiters around selected text
+ * @param {string} content - The full content
+ * @param {number} selectionStart - Start position of selection
+ * @param {number} selectionEnd - End position of selection
+ * @returns {string} Updated content with code block delimiters
+ */
+export const insertCode = (content, selectionStart, selectionEnd) => {
+  const selectedText = content.substring(selectionStart, selectionEnd);
+  const before = content.substring(0, selectionStart);
+  const after = content.substring(selectionEnd);
+
+  return `${before}\`\`\`\n${selectedText}\n\`\`\`${after}`;
 };

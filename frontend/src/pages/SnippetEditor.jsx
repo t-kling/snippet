@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { snippetAPI, topicAPI, aiAPI } from '../api/client';
 import { insertCloze, insertHighlight } from '../utils/cloze';
 import { compressImage } from '../utils/imageCompression';
-import { insertMath } from '../utils/latex';
+import { insertMath, insertCode } from '../utils/latex';
 import ImageClozeEditor from '../components/ImageClozeEditor';
 import Header from '../components/Header';
 import { useSettings } from '../contexts/SettingsContext';
@@ -218,6 +218,21 @@ function SnippetEditor() {
         textarea.setSelectionRange(newPosition, newPosition);
       }, 0);
     }
+  };
+
+  const handleCodeClick = () => {
+    const textarea = textareaRef.current;
+    const { selectionStart, selectionEnd } = textarea;
+
+    const newContent = insertCode(formData.content, selectionStart, selectionEnd);
+    setFormData({ ...formData, content: newContent });
+
+    // Position cursor inside the code block
+    setTimeout(() => {
+      textarea.focus();
+      const cursorPos = selectionStart + 4; // After ```\n
+      textarea.setSelectionRange(cursorPos, cursorPos);
+    }, 0);
   };
 
   const handleImageUpload = async (e) => {
@@ -798,6 +813,22 @@ function SnippetEditor() {
                 }}
               >
                 Math
+              </button>
+              <button
+                type="button"
+                onClick={handleCodeClick}
+                style={{
+                  padding: '5px 10px',
+                  fontSize: '12px',
+                  backgroundColor: 'transparent',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: '500',
+                }}
+              >
+                Code
               </button>
             </div>
           </div>
