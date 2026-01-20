@@ -1,0 +1,19 @@
+#!/bin/bash
+
+# Correct script for macOS Shortcuts
+export PATH="/usr/local/bin:$PATH"
+
+# Log for debugging
+echo "=== $(date) ===" >> /tmp/snippet-shortcut.log
+echo "Received: $1" >> /tmp/snippet-shortcut.log
+
+# Save to snippet (correct way - pass as argument, not stdin)
+OUTPUT=$(snippet save "$1" 2>&1)
+echo "Result: $OUTPUT" >> /tmp/snippet-shortcut.log
+
+# Show notification
+if [[ $OUTPUT == *"✅"* ]]; then
+  osascript -e 'display notification "Snippet saved!" with title "Success"'
+else
+  osascript -e "display notification \"$OUTPUT\" with title \"Snippet Error\""
+fi
