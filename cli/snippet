@@ -91,7 +91,9 @@ async function syncQueue(config) {
 // Helper to make API requests
 function apiRequest(endpoint, method, data, token, apiUrl) {
   return new Promise((resolve, reject) => {
-    const url = new URL(endpoint, apiUrl);
+    // Properly concatenate URL - remove leading slash from endpoint if apiUrl ends with /
+    const fullUrl = apiUrl.endsWith('/') ? apiUrl + endpoint.replace(/^\//, '') : apiUrl + endpoint;
+    const url = new URL(fullUrl);
     const isHttps = url.protocol === 'https:';
     const client = isHttps ? https : http;
 
