@@ -20,8 +20,10 @@ snippet config
 ```
 
 You'll be prompted for:
-- **API URL**: Your Snippet API endpoint (default: `http://localhost:5001/api`)
-- **JWT Token**: Your authentication token (get this from your browser's localStorage after logging in to the web app)
+- **API URL**:
+  - Production: `https://snippet-api.vercel.app/api`
+  - Local development: `http://localhost:5001/api` (default)
+- **JWT Token**: Your authentication token
 
 Configuration is saved to `~/.snippet-cli.json`
 

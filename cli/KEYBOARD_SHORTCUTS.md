@@ -11,11 +11,17 @@ npm link
 snippet config
 ```
 
-2. Get your JWT token:
-   - Open Snippet web app in browser and login
-   - Open Developer Tools (F12) → Console
-   - Run: `localStorage.getItem('jwtToken')`
-   - Copy the token and use it in `snippet config`
+When running `snippet config`, you'll be asked for:
+
+- **API URL**:
+  - For production: `https://snippet-api.vercel.app/api`
+  - For local development: `http://localhost:5001/api`
+
+- **JWT Token**: Get this from your logged-in session:
+  - Open Snippet web app in browser and login
+  - Open Developer Tools (F12) → Console
+  - Run: `localStorage.getItem('jwtToken')`
+  - Copy the token (without quotes) and paste it
 
 ---
 
@@ -29,18 +35,19 @@ The easiest option using macOS's built-in Shortcuts app.
 
 2. Click **"+"** to create new shortcut
 
-3. Add these actions:
-   - Search for **"Run Shell Script"** and add it
-   - In the script box, paste:
-     ```bash
-     export PATH="/usr/local/bin:$PATH"
-     echo "$1" | snippet save
-     ```
-   - Change "Input" dropdown to **"Shortcut Input"**
-   - Pass input: **as arguments**
+3. Add these actions IN ORDER:
+   - Search for **"Get Selected Items"** (or "Get Selected Text") and add it
+     - This should be the FIRST action
 
-4. Add **"Get Selected Text"** action BEFORE the shell script
-   - This should be the first action
+   - Search for **"Run Shell Script"** and add it AFTER the first action
+     - Shell: **`/bin/bash`**
+     - In the script box, paste:
+       ```bash
+       export PATH="/usr/local/bin:$PATH"
+       echo "$1" | snippet save
+       ```
+     - Change "Input" dropdown to **"Shortcut Input"**
+     - Change "Pass input" to **"as arguments"**
 
 5. Name your shortcut (e.g., "Save to Snippet")
 
